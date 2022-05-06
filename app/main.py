@@ -1,6 +1,6 @@
 import stripe
 from fastapi import FastAPI
-from .api.v1 import test
+from .api.v1 import  subscription
 
 
 app: FastAPI = FastAPI(
@@ -10,13 +10,17 @@ app: FastAPI = FastAPI(
 )
 
 app.include_router(
-    test.test,
-    prefix="/api/v1",
+    subscription.router,
+    prefix="/api/v1/subscriptions",
     tags=[
-        "Form",
+        "subscriptions",
     ],
 )
+
 
 @app.get('/')
 def index():
     return dict(message="Hello world")
+
+
+
