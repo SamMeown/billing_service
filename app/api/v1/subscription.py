@@ -1,20 +1,55 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.db.subscription import ModelSubscriptions
+from app.db.db_models import ModelSubscriptions
 from app.models.subscriptions import SubscriptionBase
-from app.models._base import BaseModel
 from typing import Optional
 from fastapi.param_functions import Query
+from fastapi_pagination.ext.sqlalchemy import paginate
+from fastapi_pagination import Page, Params
+from sqlalchemy.dialects.postgresql import UUID
 
 router = APIRouter()
+object = 'subscription'
+
+
+@router.get("/")
+async def get(
+        db: Session = Depends(get_db),
+        params: Params = Depends()
+) -> dict:
+    return {
+        "success": True,
+        "response": paginate(db.query(ModelSubscriptions), params)
+    }
+
+
+@router.get("/{id}")
+async def get_id(
+        id: Optional[str] = Query(
+            default=None,
+            description=f"A unique {object} id",
+        ),
+        db: Session = Depends(get_db),
+) -> dict:
+    response = db.query(ModelSubscriptions).filter(ModelSubscriptions.id == id).first()
+    if response is None:
+        return {
+            "success": False,
+            "response": f'The {object} not found'
+        }
+    else:
+        return {
+            "success": True,
+            "response": response
+        }
 
 
 @router.post("/create")
 async def create(
         name: Optional[str] = Query(
             default=None,
-            description="A unique subscription name",
+            description=f"A unique {object} name",
         ),
         description: Optional[str] = Query(
             default=None,
@@ -26,7 +61,7 @@ async def create(
     if db.query(ModelSubscriptions).filter(ModelSubscriptions.name == name).first() is not None:
         return {
             "success": False,
-            "created_id": 'The subscription already exists'
+            "response": f'The {object} already exists'
         }
     else:
         to_create = ModelSubscriptions(
@@ -37,17 +72,62 @@ async def create(
         db.commit()
         return {
             "success": True,
-            "created_id": to_create.id
+            "response": to_create.id
         }
 
 
-@router.get(
-    path="/{id}"
-)
-async def subscription_details(
-    id: str,
-    db: Session = Depends(get_db),
-    details: BaseModel = {},
+@router.put("/update/{id}")
+async def update(
+        id: Optional[str] = Query(
+            default=None,
+            description=f"A unique {object} id",
+        ),
+        name: Optional[str] = Query(
+            default=None,
+            description=f"A unique {object} name",
+        ),
+        description: Optional[str] = Query(
+            default=None,
+            description="Full description",
+        ),
+        details: SubscriptionBase = {},
+        db: Session = Depends(get_db)
 ) -> dict:
+    response = db.query(ModelSubscriptions).filter(ModelSubscriptions.id == id).first()
+    if response is None:
+        return {
+            "success": False,
+            "response": f'The {object} not found'
+        }
+    else:
+        response.name = name
+        response.description = description
+        db.add(response)
+        db.commit()
+        return {
+            "success": True,
+            "response": id
+        }
 
-    return db.query(ModelSubscriptions).filter(ModelSubscriptions.id == id).first()
+
+@router.delete("/{id}")
+def delete(
+        id: Optional[str] = Query(
+            default=None,
+            description=f"A unique {object} id",
+        ),
+        db: Session = Depends(get_db)
+) -> dict:
+    response = db.query(ModelSubscriptions).filter(ModelSubscriptions.id == id).first()
+    if response is None:
+        return {
+            "success": False,
+            "response": f'The {object} not found'
+        }
+    else:
+        db.query(ModelSubscriptions).filter(ModelSubscriptions.id == id).delete()
+        db.commit()
+        return {
+            "success": True,
+            "response": id
+        }

@@ -21,7 +21,7 @@ def upgrade():
     op.create_table(
         'subscriptions',
         sa.Column('id', UUID(as_uuid=True), primary_key=True),
-        sa.Column('name', sa.String, nullable=False),
+        sa.Column('name', sa.String, nullable=False, unique=True),
         sa.Column('description', sa.String, nullable=False),
         sa.Column('created_on', sa.DateTime(timezone=True), nullable=False),
         sa.Column('updated_on', sa.DateTime(timezone=True), nullable=False)

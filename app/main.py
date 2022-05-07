@@ -11,9 +11,9 @@ app: FastAPI = FastAPI(
 
 app.include_router(
     subscription.router,
-    prefix="/api/v1/subscriptions",
+    prefix="/api/v1/subscription",
     tags=[
-        "subscriptions",
+        "Subscription",
     ],
 )
 
