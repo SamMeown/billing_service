@@ -1,9 +1,11 @@
-from sqlalchemy import Integer, String, DateTime
-from sqlalchemy.sql.schema import Column
-from sqlalchemy.dialects.postgresql import UUID
-from app.db.database import Base
 import uuid
 from datetime import datetime
+
+from sqlalchemy import DateTime, Integer, String
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql.schema import Column
+
+from app.db.database import Base
 
 
 class ModelSubscriptions(Base):

@@ -1,13 +1,14 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends
+from fastapi.param_functions import Query
+from fastapi_pagination import Params
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
+
 from app.db.database import get_db
 from app.db.db_models import ModelSubscriptions
 from app.models.subscriptions import SubscriptionBase
-from typing import Optional
-from fastapi.param_functions import Query
-from fastapi_pagination.ext.sqlalchemy import paginate
-from fastapi_pagination import Page, Params
-from sqlalchemy.dialects.postgresql import UUID
 
 router = APIRouter()
 object = 'subscription'

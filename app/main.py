@@ -1,7 +1,7 @@
 import stripe
 from fastapi import FastAPI
-from .api.v1 import  subscription
 
+from .api.v1 import subscription
 
 app: FastAPI = FastAPI(
     title='Api',
