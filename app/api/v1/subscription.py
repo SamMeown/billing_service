@@ -56,6 +56,10 @@ async def create(
             default=None,
             description="Full description",
         ),
+        price: Optional[int] = Query(
+            default=0,
+            description=f"Full {object} price",
+        ),
         details: SubscriptionBase = {},
         db: Session = Depends(get_db)
 ) -> dict:
@@ -67,7 +71,8 @@ async def create(
     else:
         to_create = ModelSubscriptions(
             name=name,
-            description=description
+            description=description,
+            price=price
         )
         db.add(to_create)
         db.commit()
@@ -91,6 +96,10 @@ async def update(
             default=None,
             description="Full description",
         ),
+        price: Optional[int] = Query(
+            default=0,
+            description=f"Full {object} price",
+        ),
         details: SubscriptionBase = {},
         db: Session = Depends(get_db)
 ) -> dict:
@@ -103,6 +112,7 @@ async def update(
     else:
         response.name = name
         response.description = description
+        response.price = price
         db.add(response)
         db.commit()
         return {
