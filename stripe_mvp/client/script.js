@@ -6,6 +6,8 @@ var orderData = {
   currency: "usd"
 };
 
+var products = [];
+
 fetch("/stripe-key")
   .then(function(result) {
     return result.json();
@@ -26,8 +28,11 @@ fetch("/subscriptions")
   })
   .then(function(data) {
     setupProductOptions(data);
+    updatePurchaseInfo();
   });
 
+const orderAmount = document.querySelector('.order-amount');
+const orderDetails = document.querySelector('.order-details');
 const productsSelect = document.querySelector("#product-choice");
 const selectOptionTemplate = document.querySelector("#select-option").content;
 var buildSelectOption =  function(optionInfo) {
@@ -42,7 +47,21 @@ var setupProductOptions = function(data) {
   data.forEach(optionData => {
     option = buildSelectOption(optionData);
     productsSelect.append(option);
+    products.push(optionData);
   })
+}
+
+productsSelect.addEventListener('change', evt => {
+  updatePurchaseInfo();
+});
+
+var updatePurchaseInfo = function() {
+  if (productsSelect.selectedIndex === -1) {
+    return;
+  }
+  chosenProduct = products[productsSelect.selectedIndex];
+  orderAmount.textContent = `$${chosenProduct.price}.00`;
+  orderDetails.textContent = `Purchase ${chosenProduct.name}`;
 }
 
 var setupElements = function(data) {
