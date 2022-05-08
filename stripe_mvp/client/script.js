@@ -139,6 +139,9 @@ var payOffSession = function() {
     item: orderData.item,
     action: 'repeat'
   };
+
+  changeLoadingState(true, 'off-session');
+
   fetch("/users/alice/payments", {
     method: "POST",
     headers: {
@@ -150,6 +153,7 @@ var payOffSession = function() {
     return result.json();
   })
   .then(function(data) {
+    changeLoadingState(false, 'off-session');
     if (data.error && data.error === "authentication_required") {
       // Card needs to be authenticatied
       // Send user a message asking him for authentication
@@ -176,7 +180,7 @@ var pay = function(stripe, card) {
     data["billing_details"]["name"] = cardholderName;
   }
 
-  changeLoadingState(true);
+  changeLoadingState(true, 'on-session');
 
   // Collect card details
   stripe
@@ -237,7 +241,7 @@ var orderComplete = function(clientSecret, viewTypeClass) {
 };
 
 var showError = function(errorMsgText) {
-  changeLoadingState(false);
+  changeLoadingState(false, 'on-session');
   var errorMsg = document.querySelector(".sr-field-error");
   errorMsg.textContent = errorMsgText;
   setTimeout(function() {
@@ -246,14 +250,15 @@ var showError = function(errorMsgText) {
 };
 
 // Show a spinner on payment submission
-var changeLoadingState = function(isLoading) {
+var changeLoadingState = function(isLoading, viewTypeClass) {
+  paymentView = document.querySelector(`.payment-view.${viewTypeClass}`);
   if (isLoading) {
-    document.querySelector("button").disabled = true;
-    document.querySelector("#spinner").classList.remove("hidden");
-    document.querySelector("#button-text").classList.add("hidden");
+    paymentView.querySelector("button").disabled = true;
+    paymentView.querySelector("#spinner").classList.remove("hidden");
+    paymentView.querySelector("#button-text").classList.add("hidden");
   } else {
-    document.querySelector("button").disabled = false;
-    document.querySelector("#spinner").classList.add("hidden");
-    document.querySelector("#button-text").classList.remove("hidden");
+    paymentView.querySelector("button").disabled = false;
+    paymentView.querySelector("#spinner").classList.add("hidden");
+    paymentView.querySelector("#button-text").classList.remove("hidden");
   }
 };

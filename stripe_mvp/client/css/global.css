@@ -62,6 +62,11 @@ h4 {
 .sr-payment-summary {
   margin-bottom: 20px;
 }
+
+.sr-payment-summary.off-session {
+  margin-top: 30px;
+}
+
 .sr-main,
 .sr-content {
   display: flex;
