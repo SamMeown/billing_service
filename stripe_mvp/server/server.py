@@ -19,6 +19,12 @@ app = Flask(__name__, static_folder=static_dir,
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 
+users = {
+    'alice': {
+    }
+}
+
+
 subscriptions = {
     'subs_1m': {
         'type': 'subscription',
@@ -61,7 +67,8 @@ def fetch_subscriptions():
 def calculate_order_amount(item):
     # Calculate the order total on the server to prevent
     # people from directly manipulating the amount on the client
-    return subscriptions[item['id']] if item['type'] == 'subscription' else movies[item['id']]
+    product = subscriptions[item['id']] if item['type'] == 'subscription' else movies[item['id']]
+    return product['price'] * 100  # in cents
 
 
 @app.route('/stripe-key', methods=['GET'])
@@ -70,12 +77,20 @@ def fetch_key():
     return jsonify({'publicKey': os.getenv('STRIPE_PUBLISHABLE_KEY')})
 
 
-@app.route('/pay', methods=['POST'])
-def pay():
+@app.route('/users/<string:user_id>/payments', methods=['POST'])
+def pay(user_id: str):
+    if (user := users.get(user_id)) is None:
+        return jsonify(error='user_not_found'), 404
+
     data = json.loads(request.data)
     try:
-        if "paymentIntentId" not in data:
-            order_amount = calculate_order_amount(data['items'])
+        if data['action'] == 'create':
+            # create corresponding stripe customer if user doesn't have one yet
+            if not user.get('stripe_cus_id'):
+                stripe_customer = stripe.Customer.create()
+                user['stripe_cus_id'] = stripe_customer['id']
+
+            order_amount = calculate_order_amount(data['item'])
             payment_intent_data = dict(
                 amount=order_amount,
                 currency=data['currency'],
@@ -84,21 +99,20 @@ def pay():
                 confirm=True
             )
 
-            if data['isSavingCard']:
-                # Create a Customer to store the PaymentMethod for reuse
-                # customer = stripe.Customer.create()
-                # payment_intent_data['customer'] = customer['id']
-                payment_intent_data['customer'] = 'cus_Le0fM1iaXnHpwK'
-                
+            payment_intent_data['customer'] = user['stripe_cus_id']
+
+            if data['item']['type'] == 'subscription':
+                # Need to save card for off-session usage
                 # setup_future_usage saves the card and tells Stripe how you plan to use it later
-                # set to 'off_session' if you plan on charging the saved card when the customer is not present
+                # 'off_session' means we are going to charge the saved card when the customer is not present
                 payment_intent_data['setup_future_usage'] = 'off_session'
 
             # Create a new PaymentIntent for the order
+            # If it fails, exception will be raised
             intent = stripe.PaymentIntent.create(**payment_intent_data)
         else:
             # Confirm the PaymentIntent to collect the money
-            intent = stripe.PaymentIntent.confirm(data['paymentIntentId'])
+            intent = stripe.PaymentIntent.confirm(data['paymentId'])
         return generate_response(intent)
     except Exception as e:
         return jsonify(error=str(e)), 403

@@ -2,8 +2,7 @@
 var stripe;
 
 var orderData = {
-  items: [{ id: "photo-subscription" }],
-  currency: "usd"
+  currency: "usd",
 };
 
 var products = [];
@@ -35,6 +34,7 @@ const orderAmount = document.querySelector('.order-amount');
 const orderDetails = document.querySelector('.order-details');
 const productsSelect = document.querySelector("#product-choice");
 const selectOptionTemplate = document.querySelector("#select-option").content;
+
 var buildSelectOption =  function(optionInfo) {
   const option = selectOptionTemplate.firstElementChild.cloneNode(true);
   option.textContent = optionInfo.name;
@@ -56,12 +56,17 @@ productsSelect.addEventListener('change', evt => {
 });
 
 var updatePurchaseInfo = function() {
-  if (productsSelect.selectedIndex === -1) {
+  const product = chosenProduct();
+  if (!product) {
     return;
   }
-  chosenProduct = products[productsSelect.selectedIndex];
-  orderAmount.textContent = `$${chosenProduct.price}.00`;
-  orderDetails.textContent = `Purchase ${chosenProduct.name}`;
+
+  orderAmount.textContent = `$${product.price}.00`;
+  orderDetails.textContent = `Purchase ${product.name}`;
+}
+
+var chosenProduct = function() {
+  return productsSelect.selectedIndex !== -1 ? products[productsSelect.selectedIndex] : null;
 }
 
 var setupElements = function(data) {
@@ -101,13 +106,14 @@ var handleAction = function(clientSecret) {
       showError("Your card was not authenticated, please try again");
     } else if (data.paymentIntent.status === "requires_confirmation") {
       // Card was properly authenticated, we can attempt to confirm the payment again with the same PaymentIntent
-      fetch("/pay", {
+      fetch("/users/alice/payments", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          paymentIntentId: data.paymentIntent.id
+          action: 'confirm',
+          paymentId: data.paymentIntent.id
         })
       })
         .then(function(result) {
@@ -146,10 +152,15 @@ var pay = function(stripe, card) {
       if (result.error) {
         showError(result.error.message);
       } else {
+        const product = chosenProduct();
+        orderData.item = {
+          'type': product.type,
+          'id': product.id
+        }
         orderData.paymentMethodId = result.paymentMethod.id;
-        orderData.isSavingCard = document.querySelector("#save-card").checked;
+        orderData.action = 'create';
 
-        return fetch("/pay", {
+        return fetch("/users/alice/payments", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
