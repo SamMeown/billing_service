@@ -110,10 +110,46 @@ def pay(user_id: str):
             # Create a new PaymentIntent for the order
             # If it fails, exception will be raised
             intent = stripe.PaymentIntent.create(**payment_intent_data)
-        else:
+        elif data['action'] == 'confirm':
             # Confirm the PaymentIntent to collect the money
             intent = stripe.PaymentIntent.confirm(data['paymentId'])
+        else:  # 'repeat'
+            if not user.get('stripe_cus_id'):
+                return jsonify(error='users_stripe_cus_not_found'), 404
+
+            payment_methods = stripe.PaymentMethod.list(
+                customer=user['stripe_cus_id'],
+                type='card'
+            )
+
+            intent = stripe.PaymentIntent.create(
+                amount=calculate_order_amount(data['item']),
+                currency=data['currency'],
+                payment_method=payment_methods['data'][0]['id'],
+                customer=user['stripe_cus_id'],
+                confirm=True,
+                off_session=True
+            )
         return generate_response(intent)
+    except stripe.error.CardError as e:
+        # off-session errors
+        err = e.error
+        if err.code == 'authentication_required':
+            # Bring the customer back on-session to authenticate the purchase
+            # by sending an email or app notification to let them know
+            # the off-session purchase failed
+            # Probably we can save the PM ID and client_secret to authenticate the purchase later
+            # without asking your customers to re-enter their details
+            # err.payment_method.id, err.payment_intent.client_secret, err.payment_method.card
+            return jsonify({
+                'error': 'authentication_required',
+            })
+        elif err.code:
+            # The card was declined for other reasons (e.g. insufficient funds)
+            # Bring the customer back on-session by sending him a message asking him for a new payment method
+            return jsonify({
+                'error': err.code,
+            })
     except Exception as e:
         return jsonify(error=str(e)), 403
 

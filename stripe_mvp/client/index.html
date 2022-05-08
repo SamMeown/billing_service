@@ -33,7 +33,7 @@
           </div>    
         </form>
 
-        <div class="sr-payment-form payment-view">
+        <div class="sr-payment-form payment-view on-session">
           <div class="sr-form-row">
             <label for="card-element">
               Payment details
@@ -61,28 +61,41 @@
         </div>
 
         <div class="sr-payment-summary hidden completed-view on-session">
-          <h1>Payment <span class="status"></span></h1>
+          <h1>Payment <span class="status on-session"></span></h1>
           <h4>
             PaymentIntent response:</a>
           </h4>
         </div>
         <div class="sr-section hidden completed-view on-session">
           <div class="sr-callout">
-            <pre>
+            <pre class="on-session">
   
             </pre>
           </div>
-          <!-- <button onclick="window.location.href = '/';">Restart demo</button> -->
         </div>  
 
-        <div class="pay-off-session">
+        <div class="pay-off-session payment-view off-session">
           <label for="submit-off-session">
             Emulate off-session payment
           </label>
-          <button id="submit-off-session">
+          <button id="submit-off-session" type="button">
             <div class="spinner hidden" id="spinner"></div>
             <span id="button-text">Pay for next period</span>
           </button>
+        </div>
+
+        <div class="sr-payment-summary hidden completed-view off-session">
+          <h1>Off-session payment <span class="status off-session"></span></h1>
+          <h4>
+            Off-session PaymentIntent response:</a>
+          </h4>
+        </div>
+        <div class="sr-section hidden completed-view off-session">
+          <div class="sr-callout">
+            <pre class="off-session">
+  
+            </pre>
+          </div>
         </div>
         
       </div>

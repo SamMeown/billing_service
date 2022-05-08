@@ -19,6 +19,9 @@ fetch("/stripe-key")
       evt.preventDefault();
       pay(stripe, card, clientSecret);
     });
+    document.querySelector("#submit-off-session").addEventListener("click", function(evt) {
+      payOffSession();
+    });
   });
 
 fetch("/subscriptions")
@@ -130,6 +133,36 @@ var handleAction = function(clientSecret) {
   });
 };
 
+var payOffSession = function() {
+  var repeatedOrder = {
+    currency: orderData.currency,
+    item: orderData.item,
+    action: 'repeat'
+  };
+  fetch("/users/alice/payments", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(repeatedOrder)
+  })
+  .then(function(result) {
+    return result.json();
+  })
+  .then(function(data) {
+    if (data.error && data.error === "authentication_required") {
+      // Card needs to be authenticatied
+      // Send user a message asking him for authentication
+    } else if (data.error) {
+      // Card was declined off-session
+      // Send user a message asking him for a new card
+    } else {
+      // Card was successfully charged off-session
+      orderComplete(data.clientSecret, 'off-session');
+    }
+  });
+}
+
 /*
  * Collect card details and pay for the order 
  */
@@ -179,7 +212,7 @@ var pay = function(stripe, card) {
       } else if (paymentData.error) {
         showError(paymentData.error);
       } else {
-        orderComplete(paymentData.clientSecret);
+        orderComplete(paymentData.clientSecret, 'on-session');
       }
     });
 };
@@ -187,19 +220,19 @@ var pay = function(stripe, card) {
 /* ------- Post-payment helpers ------- */
 
 /* Shows a success / error message when the payment is complete */
-var orderComplete = function(clientSecret) {
+var orderComplete = function(clientSecret, viewTypeClass) {
   stripe.retrievePaymentIntent(clientSecret).then(function(result) {
     var paymentIntent = result.paymentIntent;
     var paymentIntentJson = JSON.stringify(paymentIntent, null, 2);
-    document.querySelectorAll(".payment-view").forEach(function(view) {
+    document.querySelectorAll(`.payment-view.${viewTypeClass}`).forEach(function(view) {
       view.classList.add("hidden");
     });
-    document.querySelectorAll(".completed-view").forEach(function(view) {
+    document.querySelectorAll(`.completed-view.${viewTypeClass}`).forEach(function(view) {
       view.classList.remove("hidden");
     });
-    document.querySelector(".status").textContent =
+    document.querySelector(`.status.${viewTypeClass}`).textContent =
       paymentIntent.status === "succeeded" ? "succeeded" : "failed";
-    document.querySelector("pre").textContent = paymentIntentJson;
+    document.querySelector(`pre.${viewTypeClass}`).textContent = paymentIntentJson;
   });
 };
 
