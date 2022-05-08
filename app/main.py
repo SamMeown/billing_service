@@ -1,7 +1,7 @@
 import stripe
 from fastapi import FastAPI
 
-from .api.v1 import subscription
+from .api.v1 import subscription, buy
 
 app: FastAPI = FastAPI(
     title='Api',
@@ -16,6 +16,15 @@ app.include_router(
         "Subscription",
     ],
 )
+
+app.include_router(
+    buy.router,
+    prefix="/api/v1/buy",
+    tags=[
+        "Buy subscription",
+    ],
+)
+
 
 
 @app.get('/')
