@@ -126,7 +126,7 @@ var handleAction = function(clientSecret) {
           if (json.error) {
             showError(json.error);
           } else {
-            orderComplete(clientSecret);
+            orderComplete(clientSecret, 'on-session');
           }
         });
     }
