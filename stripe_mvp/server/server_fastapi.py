@@ -1,13 +1,11 @@
-import stripe
-import json
 import os
-
-from fastapi import FastAPI, APIRouter
-import uvicorn
 import logging
 
+import stripe
+import uvicorn
+from fastapi import FastAPI, APIRouter, Response, Body, status
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv, find_dotenv
-
 
 
 router = APIRouter()
@@ -20,6 +18,14 @@ stripe.api_version = os.getenv('STRIPE_API_VERSION')
 
 static_dir = str(os.path.abspath(os.path.join(
     __file__, "..", os.getenv("STATIC_DIR"))))
+
+
+app = FastAPI(
+    title="Billing MVP",
+    description='Billing API MVP using Stripe',
+    docs_url='/mvp/openapi',
+    openapi_url='/mvp/openapi.json',
+)
 
 
 users = {
@@ -55,16 +61,10 @@ movies = {
 }
 
 
-@router.get('/')
-def get_example():
-    # Display checkout page
-    return render_template('index.html')
-
-
 @router.get('/subscriptions')
 def fetch_subscriptions():
     # Info about products
-    return jsonify([{**sub_info, 'id': sub_id} for sub_id, sub_info in subscriptions.items()])
+    return [{**sub_info, 'id': sub_id} for sub_id, sub_info in subscriptions.items()]
 
 
 def calculate_order_amount(item):
@@ -77,15 +77,16 @@ def calculate_order_amount(item):
 @router.get('/stripe-key')
 def fetch_key():
     # Send publishable key to client
-    return jsonify({'publicKey': os.getenv('STRIPE_PUBLISHABLE_KEY')})
+    return {'publicKey': os.getenv('STRIPE_PUBLISHABLE_KEY')}
 
 
 @router.post('/users/{user_id}/payments')
-def pay(user_id: str):
+def pay(user_id: str, response: Response, data: dict = Body(...)):
     if (user := users.get(user_id)) is None:
-        return jsonify(error='user_not_found'), 404
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return dict(error='user_not_found')
 
-    data = json.loads(request.data)
+    # data = json.loads(request.data)
     try:
         if data['action'] == 'create':
             # create corresponding stripe customer if user doesn't have one yet
@@ -118,7 +119,8 @@ def pay(user_id: str):
             intent = stripe.PaymentIntent.confirm(data['paymentId'])
         else:  # 'repeat'
             if not user.get('stripe_cus_id'):
-                return jsonify(error='users_stripe_cus_not_found'), 404
+                response.status_code = status.HTTP_404_NOT_FOUND
+                return dict(error='users_stripe_cus_not_found')
 
             payment_methods = stripe.PaymentMethod.list(
                 customer=user['stripe_cus_id'],
@@ -144,43 +146,38 @@ def pay(user_id: str):
             # Probably we can save the PM ID and client_secret to authenticate the purchase later
             # without asking your customers to re-enter their details
             # err.payment_method.id, err.payment_intent.client_secret, err.payment_method.card
-            return jsonify({
+            return {
                 'error': 'authentication_required',
-            })
+            }
         elif err.code:
             # The card was declined for other reasons (e.g. insufficient funds)
             # Bring the customer back on-session by sending him a message asking him for a new payment method
-            return jsonify({
+            return {
                 'error': err.code,
-            })
+            }
     except Exception as e:
-        return jsonify(error=str(e)), 403
+        response.status_code = status.HTTP_403_FORBIDDEN
+        return dict(error=str(e))
 
 
 def generate_response(intent):
-    status = intent['status']
-    if status == 'requires_action' or status == 'requires_source_action':
+    _status = intent['status']
+    if _status == 'requires_action' or _status == 'requires_source_action':
         # Card requires authentication
-        return jsonify({'requiresAction': True, 'paymentIntentId': intent['id'], 'clientSecret': intent['client_secret']})
-    elif status == 'requires_payment_method' or status == 'requires_source':
+        return {'requiresAction': True, 'paymentIntentId': intent['id'], 'clientSecret': intent['client_secret']}
+    elif _status == 'requires_payment_method' or _status == 'requires_source':
         # Card was not properly authenticated, suggest a new payment method
-        return jsonify({'error': 'Your card was denied, please provide a new payment method'})
-    elif status == 'succeeded':
+        return {'error': 'Your card was denied, please provide a new payment method'}
+    elif _status == 'succeeded':
         # Payment is complete, authentication not required
         # To cancel the payment after capture you will need to issue a Refund (https://stripe.com/docs/api/refunds)
         print("💰 Payment received!")
-        return jsonify({'clientSecret': intent['client_secret']})
+        return {'clientSecret': intent['client_secret']}
 
 
-app = FastAPI(
-    title="Billing MVP",
-    description='Billing API MVP using Stripe',
-    docs_url='/notifications/openapi',
-    openapi_url='/notifications/openapi.json',
-)
-
-app.include_router(router, tags=['mvp'])
+app.include_router(router)
+app.mount('/', StaticFiles(directory=static_dir, html=True), name='static')
 
 
 if __name__ == '__main__':
-    uvicorn.run('main:app', host='0.0.0.0', port=8002, log_config=LOGGING, log_level=logging.DEBUG, debug=True)
+    uvicorn.run('server_fastapi:app', host='0.0.0.0', port=4242, log_level=logging.DEBUG, debug=True)
