@@ -2,10 +2,33 @@ import uuid
 from datetime import datetime, timedelta
 
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import Column, ForeignKey, DateTime, String, Integer
+from sqlalchemy import Column, ForeignKey, DateTime, String, Integer, Table
 from sqlalchemy.orm import relationship
 
 from app.db.database import Base
+
+
+# Added m2m tables for user and movies just to try admin features
+user_movie = Table(
+    'user_movie',
+    Base.metadata,
+    Column('user_id', UUID(as_uuid=True), ForeignKey('users.id'), primary_key=True),
+    Column('movie_id', UUID(as_uuid=True), ForeignKey('movies.id'), primary_key=True)
+)
+
+
+class ModelMovies(Base):
+    __tablename__ = 'movies'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    name = Column(String, unique=True, nullable=False)
+    price = Column(Integer, default=0)
+    description = Column(String, nullable=False)
+    created_on = Column(DateTime(), default=datetime.utcnow)
+    updated_on = Column(DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __str__(self):
+        return f'Movie {self.name}'
 
 
 class ModelSubscriptions(Base):
@@ -17,7 +40,9 @@ class ModelSubscriptions(Base):
     description = Column(String, nullable=False)
     created_on = Column(DateTime(), default=datetime.utcnow)
     updated_on = Column(DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
-    user = relationship("ModelUserSubscription")
+
+    def __str__(self):
+        return f'Subs. {self.name} - {self.price}'
 
 
 # временная таблица, пока в проект не добавлена таблица users из Auth
@@ -29,7 +54,11 @@ class ModelUsers(Base):
     email = Column(String(100), unique=True, nullable=False)
     created_on = Column(DateTime(), default=datetime.utcnow)
     updated_on = Column(DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
-    subscription = relationship("ModelUserSubscription")
+    subscriptions = relationship("ModelUserSubscription", back_populates='user')
+    movies = relationship('ModelMovies', secondary=user_movie)
+
+    def __str__(self):
+        return f'User {self.name}<{self.email}>'
 
 
 class ModelUserSubscription(Base):
@@ -41,3 +70,6 @@ class ModelUserSubscription(Base):
     expired_time = Column(DateTime(), default=datetime.utcnow)
     created_on = Column(DateTime(), default=datetime.utcnow)
     updated_on = Column(DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = relationship('ModelUsers', back_populates='subscriptions')
+    subscription = relationship('ModelSubscriptions')
