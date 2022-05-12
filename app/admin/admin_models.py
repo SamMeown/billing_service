@@ -22,4 +22,4 @@ class UsersAdmin(ModelAdmin, model=ModelUsers):
 class UserSubscriptionAdmin(ModelAdmin, model=ModelUserSubscription):
     # column_details_list = [ModelUserSubscription.user_id, ModelUserSubscription.sub_id,
     #                        ModelUserSubscription.expired_time]
-    pass
+    details_template = 'details_user_subs.html'
