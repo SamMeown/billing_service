@@ -1,6 +1,6 @@
 from sqladmin import ModelAdmin
 
-from ..db.db_models import ModelSubscriptions, ModelUsers, ModelUserSubscription, ModelMovies
+from app.db.db_models import ModelSubscriptions, ModelUsers, ModelUserSubscription, ModelMovies
 
 
 class SubscriptionAdmin(ModelAdmin, model=ModelSubscriptions):
