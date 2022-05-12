@@ -1,11 +1,17 @@
 import uuid
 from datetime import datetime, timedelta
-
+import enum
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import Column, ForeignKey, DateTime, String, Integer, Table
+from sqlalchemy import Column, ForeignKey, DateTime, String, Integer, Table, Boolean, Enum
 from sqlalchemy.orm import relationship
 
 from app.db.database import Base
+
+
+class STATUS(enum.Enum):
+    ACTIVE = "ACTIVE"
+    NEEDS_PAYMENT = "NEEDS_PAYMENT"
+    EXPIRED = "EXPIRED"
 
 
 # Added m2m tables for user and movies just to try admin features
@@ -36,8 +42,12 @@ class ModelSubscriptions(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     name = Column(String, unique=True, nullable=False)
-    price = Column(Integer, default=0)
+    price = Column(Integer, default=12)
     description = Column(String, nullable=False)
+    period = Column(Integer, default=30)
+    recurring = Column(Boolean, default=True)
+    status = Column(Enum(STATUS), default=STATUS.ACTIVE)
+    grace_days = Column(Integer, default=3)
     created_on = Column(DateTime(), default=datetime.utcnow)
     updated_on = Column(DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
 

@@ -13,6 +13,13 @@ from app.models.subscriptions import SubscriptionBase
 
 router = APIRouter()
 object = 'subscription'
+import enum
+
+
+class STATUS(enum.Enum):
+    ACTIVE = "ACTIVE"
+    NEEDS_PAYMENT = "NEEDS_PAYMENT"
+    EXPIRED = "EXPIRED"
 
 
 @router.get('/subscriptions')
@@ -42,7 +49,8 @@ def get_id(
 def create(
         name: Optional[str] = Query(default=None, description=f"A unique {object} name"),
         description: Optional[str] = Query(default=None, description="Full description"),
-        price: Optional[int] = Query(default=0, description=f"Full {object} price"),
+        period: Optional[int] = Query(default=30, description=f"{object} days"),
+        price: Optional[int] = Query(default=12, description=f"Full {object} price"),
         details: SubscriptionBase = {},
         db: Session = Depends(get_db)
 ) -> dict:
@@ -55,6 +63,7 @@ def create(
         to_create = ModelSubscriptions(
             name=name,
             description=description,
+            period=period,
             price=price
         )
         db.add(to_create)
@@ -70,7 +79,11 @@ async def update(
         id: Optional[str] = Query(default=None, description=f"A unique {object} id"),
         name: Optional[str] = Query(default=None, description=f"A unique {object} name"),
         description: Optional[str] = Query(default=None, description="Full description"),
-        price: Optional[int] = Query(default=0, description=f"Full {object} price"),
+        period: Optional[int] = Query(default=30, description=f"{object} days"),
+        recurring: Optional[bool] = Query(default=True, description=f"Auto-renewal {object}"),
+        status: Optional[str] = Query(default="ACTIVE", description=f"{object} status"),
+        grace_days: Optional[int] = Query(default=3, description=f"{object} price"),
+        price: Optional[int] = Query(default=12, description=f"Full {object} price"),
         details: SubscriptionBase = {},
         db: Session = Depends(get_db)
 ) -> dict:
@@ -81,20 +94,24 @@ async def update(
         response.name = name
         response.description = description
         response.price = price
+        response.period = period
+        response.recurring = recurring
+        response.status = status
+        response.grace_days = grace_days
         db.add(response)
         db.commit()
         return {"response": id}
 
 
-@router.delete("/subscriptions/{id}/delete")
-def delete(
-        id: Optional[str] = Query(default=None, description=f"A unique {object} id"),
-        db: Session = Depends(get_db)
-) -> dict:
-    response = db.query(ModelSubscriptions).filter(ModelSubscriptions.id == id).first()
-    if response is None:
-        return {"response": f'The {object} not found'}
-    else:
-        db.query(ModelSubscriptions).filter(ModelSubscriptions.id == id).delete()
-        db.commit()
-        return {"response": id}
+# @router.delete("/subscriptions/{id}/delete")
+# def delete(
+#         id: Optional[str] = Query(default=None, description=f"A unique {object} id"),
+#         db: Session = Depends(get_db)
+# ) -> dict:
+#     response = db.query(ModelSubscriptions).filter(ModelSubscriptions.id == id).first()
+#     if response is None:
+#         return {"response": f'The {object} not found'}
+#     else:
+#         db.query(ModelSubscriptions).filter(ModelSubscriptions.id == id).delete()
+#         db.commit()
+#         return {"response": id}
