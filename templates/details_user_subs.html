@@ -42,8 +42,8 @@
           </div>
           {% endif %}
            <div class="col">
-            <a href="#" data-name="{{ model_admin.name }}" data-pk="{{ model_admin.get_attr_value(model, model_admin.pk_column) }}" data-url="{{ url_for('admin:delete', identity=model_admin.identity, pk=model_admin.get_attr_value(model, model_admin.pk_column)) }}" data-bs-toggle="modal" data-bs-target="#modal-cancel" class="btn btn-green">
-              Cancel subscription
+            <a href="#" data-name="{{ model_admin.name }}" data-pk="{{ model_admin.get_attr_value(model, model_admin.pk_column) }}" data-url="{{ url_for('delete_buy', id=model_admin.get_attr_value(model, model_admin.pk_column)) }}" data-bs-toggle="modal" data-bs-target="#modal-cancel" class="btn btn-green">
+             Cancel subscription
             </a>
           </div>
         </div>
@@ -55,4 +55,7 @@
 {% include 'modals/delete.html' %}
 {% include 'modals/cancel.html' %}
 {% endif %}
+{% endblock %}
+{% block tail %}
+<script type="text/javascript" src="{{ url_for('static', path='js/main_user_subs.js') }}"></script>
 {% endblock %}

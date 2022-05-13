@@ -150,7 +150,7 @@ async def update(
                 }
 
 
-@router.delete("/{id}")
+@router.delete("/{id}", name='delete_buy')
 def delete(
         id: Optional[str] = Query(
             default=None,
