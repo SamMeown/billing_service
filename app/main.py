@@ -1,5 +1,6 @@
 import stripe
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
 import uvicorn
 import logging
@@ -37,6 +38,9 @@ app.include_router(
         "Buy subscription",
     ],
 )
+
+
+app.mount('/static', StaticFiles(directory='static'), name='static')
 
 
 
