@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Billing MVP using Stripe</title>
+    <meta name="description" content="Billing MVP using Stripe - client" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    
+    <link rel="stylesheet" href="css/normalize.css" />
+    <link rel="stylesheet" href="css/global.css" />
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="/script.js" defer></script>
+  </head>
+
+  <body>
+    <div class="sr-root">
+      <div class="sr-main">
+        <header class="sr-header">
+          <div class="sr-header__logo"></div>
+        </header>
+
+        <form class="sr-select-pm product-choice">
+          <div class="sr-combo-inputs-row">
+            <label for="product-choice">
+              Pick a product
+            </label>
+            <select class="sr-select" id="product-choice">
+            </select>
+          </div>
+          <div class="sr-payment-summary">
+            <h1 class="order-amount">$12.00</h1>
+            <h4 class="order-details">Purchase 1-Month Subscription</h4>
+          </div>    
+        </form>
+
+        <div class="sr-payment-form payment-view on-session">
+          <div class="sr-form-row">
+            <label for="card-element">
+              Payment details
+            </label>
+            <div class="sr-combo-inputs">
+              <div class="sr-combo-inputs-row">
+                <input
+                  type="text"
+                  id="name"
+                  placeholder="Name"
+                  autocomplete="cardholder"
+                  class="sr-input"
+                />
+              </div>
+              <div class="sr-combo-inputs-row">
+                <div class="sr-input sr-card-element" id="card-element"></div>
+              </div>
+            </div>
+            <div class="sr-field-error" id="card-errors" role="alert"></div>
+          </div>
+          <button id="submit"><div class="spinner hidden" id="spinner"></div><span id="button-text">Pay</span></button>
+        </div>
+
+        <div class="sr-payment-summary hidden completed-view on-session">
+          <h1>Payment <span class="status on-session"></span></h1>
+          <h4>
+            PaymentIntent response:</a>
+          </h4>
+        </div>
+        <div class="sr-section hidden completed-view on-session">
+          <div class="sr-callout">
+            <pre class="on-session">
+  
+            </pre>
+          </div>
+        </div>  
+
+        <div class="pay-off-session payment-view off-session">
+          <label for="submit-off-session">
+            Emulate off-session payment
+          </label>
+          <button id="submit-off-session" type="button">
+            <div class="spinner hidden" id="spinner"></div>
+            <span id="button-text">Pay for next period</span>
+          </button>
+        </div>
+
+        <div class="sr-payment-summary hidden completed-view off-session">
+          <h1>Off-session payment <span class="status off-session"></span></h1>
+          <h4>
+            Off-session PaymentIntent response:</a>
+          </h4>
+        </div>
+        <div class="sr-section hidden completed-view off-session">
+          <div class="sr-callout">
+            <pre class="off-session">
+  
+            </pre>
+          </div>
+        </div>
+        
+      </div>
+      <div class="sr-content">
+        <div class="pasha-image-stack">
+          <img
+            src="https://source.unsplash.com/2uwFEAGUm6E/280x320"
+            width="140"
+            height="160"
+          />
+          <img
+            src="https://source.unsplash.com/5Wt3FrShX2Q/280x320"
+            width="140"
+            height="160"
+          />
+          <img
+            src="https://source.unsplash.com/CiUR8zISX60/280x320"
+            width="140"
+            height="160"
+          />
+        </div>
+      </div>
+    </div>
+    <template id="select-option">
+      <option value="">
+      </option>
+    </template>
+  </body>
+</html>

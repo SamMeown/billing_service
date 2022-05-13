@@ -1,18 +1,15 @@
-import stripe
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
-import uvicorn
-import logging
-
-from .api.v1 import subscription, buy
+from .api.v1.server import server, subscriptions, payments
+from .models.admin_models import SubscriptionAdmin, MovieAdmin, UsersAdmin, UserSubscriptionAdmin
 from .db.database import engine
-from .admin.admin_models import SubscriptionAdmin, MovieAdmin, UsersAdmin, UserSubscriptionAdmin
 
-app: FastAPI = FastAPI(
-    title='Api',
-    docs_url="/api/openapi",
-    openapi_url="/api/openapi.json",
+app = FastAPI(
+    title="Billing MVP",
+    description='Billing API MVP using Stripe',
+    docs_url='/mvp/openapi',
+    openapi_url='/mvp/openapi.json',
 )
 
 admin = Admin(app, engine=engine)
@@ -22,31 +19,32 @@ admin.register_model(MovieAdmin)
 admin.register_model(UsersAdmin)
 admin.register_model(UserSubscriptionAdmin)
 
-
 app.include_router(
-    subscription.router,
-    prefix="/api/v1/subscription",
+    server.router,
+    prefix="",
     tags=[
-        "Subscription",
+        "Server",
     ],
 )
 
 app.include_router(
-    buy.router,
-    prefix="/api/v1/buy",
+    subscriptions.router,
+    prefix="",
     tags=[
-        "Buy subscription",
+        "Subscriptions",
+    ],
+)
+
+app.include_router(
+    payments.router,
+    prefix="",
+    tags=[
+        "Payments",
     ],
 )
 
 
 app.mount('/static', StaticFiles(directory='static'), name='static')
 
-
-
-@app.get('/')
-def index():
-    return dict(message="Hello world")
-
-
-
+static_dir = "/app/app/api/v1/client/"
+app.mount('/', StaticFiles(directory=static_dir, html=True), name='static')
