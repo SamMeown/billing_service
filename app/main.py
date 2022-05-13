@@ -1,3 +1,6 @@
+import uvicorn
+import logging
+import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
@@ -46,5 +49,8 @@ app.include_router(
 
 app.mount('/static', StaticFiles(directory='static'), name='static')
 
-static_dir = "/app/app/api/v1/client/"
+static_dir = "app/api/v1/client/"
 app.mount('/', StaticFiles(directory=static_dir, html=True), name='static')
+
+if __name__ == '__main__':
+    uvicorn.run('app.main:app', host='0.0.0.0', port=8000, log_level=logging.DEBUG, debug=True)
