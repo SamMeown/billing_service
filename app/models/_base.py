@@ -8,7 +8,7 @@ def orjson_dumps(v, *, default) -> str:
     return dumps(v, default=default).decode()
 
 
-class BaseModel(PydanticBaseModel):
+class BaseModelID(PydanticBaseModel):
     id: UUID = Field(
         default_factory=uuid4,
         description="Entity id",
