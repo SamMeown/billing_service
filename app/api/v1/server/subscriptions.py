@@ -13,13 +13,6 @@ from app.models.subscriptions import SubscriptionBase
 
 router = APIRouter()
 object = 'subscription'
-import enum
-
-
-class STATUS(enum.Enum):
-    ACTIVE = "ACTIVE"
-    NEEDS_PAYMENT = "NEEDS_PAYMENT"
-    EXPIRED = "EXPIRED"
 
 
 @router.get('/subscriptions')
@@ -35,7 +28,7 @@ def fetch_subscriptions(
 
 @router.get("/subscriptions/{id}")
 def get_id(
-        id: Optional[str] = Query(default=None, description=f"A unique {object} id"),
+        id: Optional[str],
         db: Session = Depends(get_db)
 ) -> dict:
     response = db.query(ModelSubscriptions).filter(ModelSubscriptions.id == id).first()
@@ -45,78 +38,41 @@ def get_id(
         return response
 
 
-@router.post("/subscriptions/create")
+@router.post("/subscriptions")
 def create(
-        name: Optional[str] = Query(default=None, description=f"A unique {object} name"),
-        description: Optional[str] = Query(default=None, description="Full description"),
-        period: Optional[int] = Query(default=30, description=f"{object} days"),
-        price: Optional[int] = Query(default=12, description=f"Full {object} price"),
-        details: SubscriptionBase = {},
+        subscription: SubscriptionBase,
         db: Session = Depends(get_db)
 ) -> dict:
-    if db.query(ModelSubscriptions).filter(ModelSubscriptions.name == name).first() is not None:
-        return {
-            "success": False,
-            "response": f'The {object} already exists'
-        }
+    if db.query(ModelSubscriptions).filter(ModelSubscriptions.name == subscription.name).first() is not None:
+        return {"response": f'The {object} already exists'}
     else:
         to_create = ModelSubscriptions(
-            name=name,
-            description=description,
-            period=period,
-            price=price
+            name=subscription.name,
+            description=subscription.description,
+            period=subscription.period,
+            price=subscription.price
         )
         db.add(to_create)
         db.commit()
-        return {
-            "success": True,
-            "response": to_create.id
-        }
+        return {"response": to_create.id}
 
 
-@router.put("/subscriptions/{id}/update")
+@router.put("/subscriptions/{id}")
 async def update(
-        id: Optional[str] = Query(default=None, description=f"A unique {object} id"),
-        name: Optional[str] = Query(default=None, description=f"A unique {object} name"),
-        description: Optional[str] = Query(default=None, description="Full description"),
-        period: Optional[int] = Query(default=30, description=f"{object} days"),
-        recurring: Optional[bool] = Query(default=True, description=f"Auto-renewal {object}"),
-        status: str = Query("ACTIVE", enum=['ACTIVE', 'NEEDS_PAYMENT', 'EXPIRED']),
-        grace_days: Optional[int] = Query(default=3, description=f"{object} price"),
-        price: Optional[int] = Query(default=12, description=f"Full {object} price"),
-        details: SubscriptionBase = {},
+        id: Optional[str],
+        subscription: SubscriptionBase,
         db: Session = Depends(get_db)
 ) -> dict:
     response = db.query(ModelSubscriptions).filter(ModelSubscriptions.id == id).first()
+
     if response is None:
         return {"response": f'The {object} not found'}
     else:
-        response.name = name
-        response.description = description
-        response.price = price
-        response.period = period
-        response.recurring = recurring
-        response.status = status
-        response.grace_days = grace_days
+        response.name = subscription.name
+        response.description = subscription.description
+        response.price = subscription.price
+        response.period = subscription.period
+
         db.add(response)
         db.commit()
         return {"response": id}
-
-
-@router.delete("/subscriptions/{id}/delete", name='delete_buy')
-def delete(
-        id: Optional[str] = Query(default=None, description=f"A unique {object} id"),
-        chargeback: Optional[bool] = Query(default=False, description=f"Chargeback of {object}"),
-        db: Session = Depends(get_db)
-) -> dict:
-    response = db.query(ModelSubscriptions).filter(ModelSubscriptions.id == id).first()
-    if response is None:
-        return {"response": f'The {object} not found'}
-    else:
-        if chargeback is True:
-            response.status = "EXPIRED"
-        else:
-            response.recurring = False
-        db.add(response)
-        db.commit()
-        return {"response": response.id}

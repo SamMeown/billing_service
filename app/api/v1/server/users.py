@@ -8,84 +8,66 @@ from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app.db.db_models import ModelMovies
-from app.models.movies import MovieBase
-
+from app.db.db_models import ModelUsers
+from app.models.users import UsersBase
 
 router = APIRouter()
-object = 'movies'
+object = 'users'
 
 
-movies = {
-    'movie_swe4': {
-        'type': 'movie',
-        'name': 'Star Wars: Episode 4',
-        'price': 8,
-    },
-    'movie_swe5': {
-        'type': 'movie',
-        'name': 'Star Wars: Episode 5',
-        'price': 8,
-    },
-}
-
-
-@router.get('/movies')
+@router.get('/users')
 def fetch_subscriptions(
         db: Session = Depends(get_db),
         params: Params = Depends()
 ) -> list:
-    _movies = jsonable_encoder(paginate(db.query(ModelMovies), params))
-    if _movies.get('items') is not None:
-        return _movies.get('items')
+    _users = jsonable_encoder(paginate(db.query(ModelUsers), params))
+    if _users.get('items') is not None:
+        return _users.get('items')
     return []
 
 
-@router.get("/movies/{id}")
+@router.get("/users/{id}")
 def get_id(
         id: Optional[str],
         db: Session = Depends(get_db)
 ) -> dict:
-    response = db.query(ModelMovies).filter(ModelMovies.id == id).first()
+    response = db.query(ModelUsers).filter(ModelUsers.id == id).first()
     if response is None:
         return {"response": f'The {object} not found'}
     else:
         return response
 
 
-@router.post("/movies")
+@router.post("/users")
 def create(
-        movies: MovieBase,
+        users: UsersBase,
         db: Session = Depends(get_db)
 ) -> dict:
-    if db.query(ModelMovies).filter(ModelMovies.name == movies.name).first() is not None:
+    if db.query(ModelUsers).filter(ModelUsers.id == users.id).first() is not None:
         return {"response": f'The {object} already exists'}
     else:
-        to_create = ModelMovies(
-            name=movies.name,
-            description=movies.description,
-            price=movies.price
+        to_create = ModelUsers(
+            id=users.id,
+            stripe_cus_id=users.stripe_cus_id
         )
-
         db.add(to_create)
         db.commit()
         return {"response": to_create.id}
 
 
-@router.put("/movies/{id}")
+@router.put("/users/{id}")
 async def update(
         id: Optional[str],
-        movies: MovieBase,
+        stripe_cus_id: Optional[str],
         db: Session = Depends(get_db)
 ) -> dict:
-    response = db.query(ModelMovies).filter(ModelMovies.id == id).first()
+    response = db.query(ModelUsers).filter(ModelUsers.id == id).first()
 
     if response is None:
         return {"response": f'The {object} not found'}
     else:
-        response.name = movies.name
-        response.description = movies.description
-        response.price = movies.price
+        response.id = id
+        response.stripe_cus_id = stripe_cus_id
 
         db.add(response)
         db.commit()

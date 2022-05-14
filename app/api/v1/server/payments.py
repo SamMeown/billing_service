@@ -21,6 +21,7 @@ users = {
     }
 }
 
+
 def calculate_order_amount(item):
     # Calculate the order total on the server to prevent
     # people from directly manipulating the amount on the client
@@ -106,6 +107,7 @@ def pay(user_id: str, response: Response, data: dict = Body(...)):
     except Exception as e:
         response.status_code = status.HTTP_403_FORBIDDEN
         return dict(error=str(e))
+
 
 def generate_response(intent):
     _status = intent['status']

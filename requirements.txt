@@ -30,3 +30,4 @@ typing_extensions==4.2.0
 urllib3==1.26.9
 uvicorn==0.17.6
 WTForms==3.0.1
+sqlalchemy_utils
