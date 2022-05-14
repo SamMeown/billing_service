@@ -39,10 +39,13 @@ def upgrade():
     ),
 
     op.create_table(
-        'users',
+        'user_subscriptions',
 
         sa.Column('id', GUID, primary_key=True, server_default=GUID_SERVER_DEFAULT_POSTGRESQL),
-        sa.Column('stripe_cus_id', sa.String(256), nullable=True),
+        sa.Column('sub_id', UUID(as_uuid=True), ForeignKey('subscriptions.id'), nullable=False),
+        sa.Column('recurring', sa.Boolean, nullable=False, server_default='True'),
+        sa.Column('status', sa.String, nullable=False, server_default='ACTIVE'),
+        sa.Column('grace_days', sa.Integer, nullable=False, server_default='3'),
 
         sa.Column('created_on', sa.DateTime(timezone=True), nullable=False, server_default=func.now()),
         sa.Column('updated_on', sa.DateTime(timezone=True), nullable=False, server_default=func.now(),
@@ -50,14 +53,12 @@ def upgrade():
     ),
 
     op.create_table(
-        'user_subscriptions',
+        'users',
 
         sa.Column('id', GUID, primary_key=True, server_default=GUID_SERVER_DEFAULT_POSTGRESQL),
-        sa.Column('user_id', UUID(as_uuid=True), ForeignKey('users.id')),
-        sa.Column('sub_id', UUID(as_uuid=True), ForeignKey('subscriptions.id')),
-        sa.Column('recurring', sa.Boolean, nullable=False, server_default='True'),
-        sa.Column('status', sa.String, nullable=False, server_default='ACTIVE'),
-        sa.Column('grace_days', sa.Integer, nullable=False, server_default='3'),
+        sa.Column('stripe_cus_id', sa.String(256), nullable=True),
+        sa.Column('user_subscription_id', UUID(as_uuid=True), ForeignKey('user_subscriptions.id'), nullable=True,
+                  unique=True),
 
         sa.Column('created_on', sa.DateTime(timezone=True), nullable=False, server_default=func.now()),
         sa.Column('updated_on', sa.DateTime(timezone=True), nullable=False, server_default=func.now(),

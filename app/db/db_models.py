@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import enum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Column, ForeignKey, DateTime, String, Integer, Table, Boolean, Enum
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
 from app.db.database import Base
 
@@ -50,7 +50,8 @@ class ModelUsers(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     stripe_cus_id = Column(String(256), nullable=True)
-    subscriptions = relationship("ModelUserSubscription", back_populates='user')
+    user_subscription_id = Column(UUID(as_uuid=True), ForeignKey('user_subscriptions.id'), nullable=True, unique=True)
+    subscription = relationship("ModelUserSubscription", back_populates='users')
     movies = relationship('ModelMovies', secondary='user_movies')
 
     created_on = Column(DateTime(), default=datetime.utcnow)
@@ -64,12 +65,11 @@ class ModelUserSubscription(Base):
     __tablename__ = 'user_subscriptions'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
     sub_id = Column(UUID(as_uuid=True), ForeignKey('subscriptions.id'), nullable=False)
     recurring = Column(Boolean, default=True, nullable=False)
     status = Column(Enum(STATUS), default=STATUS.ACTIVE, nullable=False)
     grace_days = Column(Integer, default=3, nullable=False)
-    user = relationship('ModelUsers', back_populates='subscriptions')
+    users = relationship('ModelUsers', back_populates='subscription')
     subscription = relationship('ModelSubscriptions')
 
     created_on = Column(DateTime(), default=datetime.utcnow)
