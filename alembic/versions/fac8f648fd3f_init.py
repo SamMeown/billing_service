@@ -84,7 +84,10 @@ def upgrade():
                   onupdate=datetime.utcnow)
     ),
 
+
 def downgrade():
     op.drop_table('subscriptions'),
-    # op.drop_table('users')
-    # op.drop_table('user_subscriptions')
+    op.drop_table('users')
+    op.drop_table('user_subscriptions')
+    op.drop_table('movies')
+    op.drop_table('user_movies')
