@@ -19,68 +19,72 @@ down_revision = None
 branch_labels = None
 depends_on = None
 
+from sqlalchemy.sql import func
+from fastapi_utils.guid_type import GUID, GUID_SERVER_DEFAULT_POSTGRESQL
+
 
 def upgrade():
     op.create_table(
         'subscriptions',
 
-        sa.Column('id', UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4()),
+        sa.Column('id', GUID, primary_key=True, server_default=GUID_SERVER_DEFAULT_POSTGRESQL),
         sa.Column('name', sa.String, nullable=False, unique=True),
         sa.Column('description', sa.String),
-        sa.Column('price', sa.Integer, nullable=False, default=0),
-        sa.Column('period', sa.Integer, default=30),
-        sa.Column('type', sa.String, nullable=False, default='subscription'),
+        sa.Column('price', sa.Integer, nullable=False, server_default='0'),
+        sa.Column('period', sa.Integer, nullable=False, server_default='30'),
 
-        sa.Column('created_on', sa.DateTime(timezone=True), nullable=False),
-        sa.Column('updated_on', sa.DateTime(timezone=True), nullable=False, default=datetime.utcnow,
+        sa.Column('created_on', sa.DateTime(timezone=True), nullable=False, server_default=func.now()),
+        sa.Column('updated_on', sa.DateTime(timezone=True), nullable=False, server_default=func.now(),
                   onupdate=datetime.utcnow)
     ),
 
     op.create_table(
         'users',
-        sa.Column('id', UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4()),
+
+        sa.Column('id', GUID, primary_key=True, server_default=GUID_SERVER_DEFAULT_POSTGRESQL),
         sa.Column('stripe_cus_id', sa.String(256), nullable=True),
 
-        sa.Column('created_on', sa.DateTime(timezone=True), nullable=False, default=datetime.utcnow),
-        sa.Column('updated_on', sa.DateTime(timezone=True), nullable=False, default=datetime.utcnow,
+        sa.Column('created_on', sa.DateTime(timezone=True), nullable=False, server_default=func.now()),
+        sa.Column('updated_on', sa.DateTime(timezone=True), nullable=False, server_default=func.now(),
                   onupdate=datetime.utcnow)
     ),
 
     op.create_table(
         'user_subscriptions',
-        sa.Column('id', UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
+
+        sa.Column('id', GUID, primary_key=True, server_default=GUID_SERVER_DEFAULT_POSTGRESQL),
         sa.Column('user_id', UUID(as_uuid=True), ForeignKey('users.id')),
         sa.Column('sub_id', UUID(as_uuid=True), ForeignKey('subscriptions.id')),
-        sa.Column('recurring', sa.Boolean, default=True),
-        sa.Column('status', sa.String, nullable=False, default="ACTIVE"),
-        sa.Column('grace_days', sa.Integer, default=3),
+        sa.Column('recurring', sa.Boolean, nullable=False, server_default='True'),
+        sa.Column('status', sa.String, nullable=False, server_default='ACTIVE'),
+        sa.Column('grace_days', sa.Integer, nullable=False, server_default='3'),
 
-        sa.Column('created_on', sa.DateTime(timezone=True), nullable=False),
-        sa.Column('updated_on', sa.DateTime(timezone=True), nullable=False, default=datetime.utcnow,
+        sa.Column('created_on', sa.DateTime(timezone=True), nullable=False, server_default=func.now()),
+        sa.Column('updated_on', sa.DateTime(timezone=True), nullable=False, server_default=func.now(),
                   onupdate=datetime.utcnow)
     ),
 
     op.create_table(
         'movies',
-        sa.Column('id', UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4()),
+
+        sa.Column('id', GUID, primary_key=True, server_default=GUID_SERVER_DEFAULT_POSTGRESQL),
         sa.Column('name', sa.String, nullable=False, unique=True),
         sa.Column('description', sa.String),
-        sa.Column('price', sa.Integer, nullable=False, default=0),
-        sa.Column('type', sa.String, nullable=False, default='movie'),
+        sa.Column('price', sa.Integer, nullable=False, server_default='0'),
 
-        sa.Column('created_on', sa.DateTime(timezone=True), nullable=False),
-        sa.Column('updated_on', sa.DateTime(timezone=True), nullable=False, default=datetime.utcnow,
+        sa.Column('created_on', sa.DateTime(timezone=True), nullable=False, server_default=func.now()),
+        sa.Column('updated_on', sa.DateTime(timezone=True), nullable=False, server_default=func.now(),
                   onupdate=datetime.utcnow)
     ),
     op.create_table(
         'user_movies',
-        sa.Column('id', UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
+
+        sa.Column('id', GUID, primary_key=True, server_default=GUID_SERVER_DEFAULT_POSTGRESQL),
         sa.Column('user_id', UUID(as_uuid=True), ForeignKey('users.id')),
         sa.Column('movie_id', UUID(as_uuid=True), ForeignKey('movies.id')),
-        sa.Column('status', sa.String, nullable=False, default="ACTIVE"),
 
-        sa.Column('created_on', sa.DateTime(timezone=True), nullable=False),
-        sa.Column('updated_on', sa.DateTime(timezone=True), nullable=False, default=datetime.utcnow,
+        sa.Column('created_on', sa.DateTime(timezone=True), nullable=False, server_default=func.now()),
+        sa.Column('updated_on', sa.DateTime(timezone=True), nullable=False, server_default=func.now(),
                   onupdate=datetime.utcnow)
     ),
 

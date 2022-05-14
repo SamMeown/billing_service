@@ -79,9 +79,9 @@ app.include_router(
 )
 
 
-app.mount('/static', StaticFiles(directory='static'), name='static')
-
+# app.mount('/static', StaticFiles(directory='static'), name='static')
 #static_dir = "app/api/v1/client/"
+
 static_dir = "/app/app/api/v1/client/"
 app.mount('/', StaticFiles(directory=static_dir, html=True), name='static')
 

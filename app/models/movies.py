@@ -14,9 +14,6 @@ class MovieBase(PydanticBaseModel):
     price: Optional[int] = Field(
         default=0,
         description="Movie price")
-    type: Optional[str] = Field(
-        default="movie",
-        description="Movie type")
 
     class Config:
         title = "Basic movie model"
@@ -24,8 +21,7 @@ class MovieBase(PydanticBaseModel):
             "example": {
                 "name": "Around the World in 80 Days",
                 "description": "Gentleman adventurer Phileas Fogg sets out on a quest to travel around the world and back home in a period of 80 days",
-                "price": 0,  # $
-                "type": "movie"
+                "price": 0  # $
             }
         }
 

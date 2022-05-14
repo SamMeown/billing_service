@@ -17,9 +17,6 @@ class SubscriptionBase(PydanticBaseModel):
     price: Optional[int] = Field(
         default=0,
         description="Subscription price")
-    type: Optional[str] = Field(
-        default="subscription",
-        description="Subscription type")
 
     class Config:
         title = "Basic subscription model"
@@ -28,8 +25,7 @@ class SubscriptionBase(PydanticBaseModel):
                 "name": "1-Month Subscription",
                 "description": "Subscription for 4 people",
                 "price": 0,  # $
-                "period": 30,  #days
-                "type": "subscription"
+                "period": 30  #days
             }
         }
 
