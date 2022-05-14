@@ -36,3 +36,12 @@ def get_id(
         return {"response": f'The {object} not found'}
     else:
         return response
+
+
+# TODO
+@router.delete("/users/{user_id}/subscription")
+def delete_users_subscription(
+        user_id: Optional[str],
+        db: Session = Depends(get_db)
+) -> dict:
+    return {'status': 'TODO'}
