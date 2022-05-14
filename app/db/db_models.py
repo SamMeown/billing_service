@@ -53,7 +53,7 @@ class ModelUsers(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     stripe_cus_id = Column(String(256), nullable=True)
     subscriptions = relationship("ModelUserSubscription", back_populates='user')
-    movies = relationship('ModelUserMovies', back_populates='user')
+    movies = relationship('ModelMovies', secondary='user_movies')
 
     created_on = Column(DateTime(), default=datetime.utcnow)
     updated_on = Column(DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -85,8 +85,6 @@ class ModelUserMovies(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
     movie_id = Column(UUID(as_uuid=True), ForeignKey('movies.id'), nullable=False)
     status = Column(Enum(STATUS), default=STATUS.ACTIVE, nullable=False)
-    user = relationship('ModelUsers', back_populates='movies')
-    movie = relationship('ModelMovies')
 
     created_on = Column(DateTime(), default=datetime.utcnow)
     updated_on = Column(DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
