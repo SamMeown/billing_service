@@ -21,7 +21,6 @@ class ModelMovies(Base):
     name = Column(String, unique=True, nullable=False)
     description = Column(String)
     price = Column(Integer, default=0, nullable=False)
-    type = Column(String, default='movie', nullable=False)
 
     created_on = Column(DateTime(), default=datetime.utcnow)
     updated_on = Column(DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -38,7 +37,6 @@ class ModelSubscriptions(Base):
     description = Column(String)
     price = Column(Integer, default=0, nullable=False)
     period = Column(Integer, default=30, nullable=False)
-    type = Column(String, default='subscription', nullable=False)
 
     created_on = Column(DateTime(), default=datetime.utcnow)
     updated_on = Column(DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -84,7 +82,6 @@ class ModelUserMovies(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
     movie_id = Column(UUID(as_uuid=True), ForeignKey('movies.id'), nullable=False)
-    status = Column(Enum(STATUS), default=STATUS.ACTIVE, nullable=False)
 
     created_on = Column(DateTime(), default=datetime.utcnow)
     updated_on = Column(DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
