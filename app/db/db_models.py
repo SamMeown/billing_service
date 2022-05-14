@@ -51,7 +51,7 @@ class ModelUsers(Base):
     __tablename__ = 'users'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    stripe_cus_id = Column(UUID(as_uuid=True), default=uuid.uuid4, nullable=False)
+    stripe_cus_id = Column(String(256), nullable=True)
     subscriptions = relationship("ModelUserSubscription", back_populates='user')
     movies = relationship('ModelUserMovies', back_populates='user')
 

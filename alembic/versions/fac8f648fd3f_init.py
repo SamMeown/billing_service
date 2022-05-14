@@ -39,7 +39,7 @@ def upgrade():
     op.create_table(
         'users',
         sa.Column('id', UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid.uuid4()),
-        sa.Column('stripe_cus_id', UUID(as_uuid=True), nullable=False, default=uuid.uuid4()),
+        sa.Column('stripe_cus_id', sa.String(256), nullable=True),
 
         sa.Column('created_on', sa.DateTime(timezone=True), nullable=False, default=datetime.utcnow),
         sa.Column('updated_on', sa.DateTime(timezone=True), nullable=False, default=datetime.utcnow,
