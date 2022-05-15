@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Column, ForeignKey, DateTime, String, Integer, Table, Boolean, Enum
 from sqlalchemy.orm import relationship, backref
 
-from app.db.database import Base
+from .database import Base
 
 
 class STATUS(enum.Enum):
