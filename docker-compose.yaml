@@ -1,5 +1,9 @@
 version: "3.8"
 
+volumes:
+  rabbitmq_billing_data:
+  rabbitmq_billing_logs:
+
 services:
   app:
     build:
@@ -49,6 +53,18 @@ services:
     networks:
       - movies
     restart: unless-stopped
+  
+  rabbitmq_billing:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq_billing
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    env_file:
+      - .env
+    volumes:
+      - rabbitmq_billing_data:/var/lib/rabbitmq/
+      - rabbitmq_billing_logs:/var/log/rabbitmq
 
 networks:
   movies:
