@@ -7,8 +7,8 @@ from fastapi_pagination import Params
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 
-from app.db.database import get_db
-from app.db.db_models import ModelUserSubscription
+from db.database import get_db
+from db.db_models import ModelUserSubscription
 from app.models.user_subscriptions import UserSubscriptionBase
 
 router = APIRouter()

@@ -1,12 +1,16 @@
+import os
+import sys
+app_root = os.path.dirname(os.path.abspath(__file__))
+app_root_parent = os.path.dirname(app_root)
+sys.path.append(app_root_parent)
 import uvicorn
 import logging
-import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
-from .api.v1.server import server, subscriptions, payments, users, user_subscriptions, movies, user_movies
-from .models.admin_models import SubscriptionAdmin, MovieAdmin, UsersAdmin, UserSubscriptionAdmin
-from .db.database import engine
+from api.v1.server import server, subscriptions, payments, users, user_subscriptions, movies, user_movies
+from models.admin_models import SubscriptionAdmin, MovieAdmin, UsersAdmin, UserSubscriptionAdmin
+from db.database import engine
 
 app = FastAPI(
     title="Billing MVP",
@@ -79,12 +83,12 @@ app.include_router(
 )
 
 
-# app.mount('/static', StaticFiles(directory='static'), name='static')
-#static_dir = "app/api/v1/client/"
+admin_static_dir = os.path.join(app_root_parent, 'static')
+app.mount('/static', StaticFiles(directory=admin_static_dir), name='static')
 
-static_dir = "/app/app/api/v1/client/"
+static_dir = os.path.join(app_root, 'api/v1/client/')
 app.mount('/', StaticFiles(directory=static_dir, html=True), name='static')
 
 
 if __name__ == '__main__':
-    uvicorn.run('app.main:app', host='0.0.0.0', port=8000, log_level=logging.DEBUG, debug=True)
+    uvicorn.run('main:app', host='0.0.0.0', port=8000, log_level=logging.DEBUG, debug=True)

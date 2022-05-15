@@ -6,8 +6,8 @@ from fastapi_pagination import Params
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 
-from app.db.database import get_db
-from app.db.db_models import ModelUserMovies
+from db.database import get_db
+from db.db_models import ModelUserMovies
 from app.models.user_movies import UserMovieBase
 
 router = APIRouter()
