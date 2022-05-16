@@ -50,12 +50,14 @@ def renew_subscription(user_id, is_initial=True):
                 # error: user not found
                 logging.error('user not found')
                 return
-            if not (user_subscription := user.subscription):
+            user_subscription = user.subscription
+            if not user_subscription:
                 # error: no subscription
                 logging.error('user doesn\'t have subscription')
                 return
-            if user_subscription.status != STATUS.NEEDS_PAYMENT:
-                logging.info('user subscription doesn\'t need renewal (status: %s)', user_subscription.status.name)
+            if not user_subscription.recurring or user_subscription.status != STATUS.NEEDS_PAYMENT:
+                logging.info('user subscription doesn\'t need renewal (status: %s, recurring: %s)',
+                             user_subscription.status.name, user_subscription.recurring)
                 return
             if not user.stripe_cus_id:
                 # error: no stripe customer id
@@ -88,13 +90,16 @@ def renew_subscription(user_id, is_initial=True):
             logging.error('Stripe Request Error: %s', e.user_message)
         except stripe_error.CardError as e:
             # off-session card errors
-            err = e.error
-            logging.error('failed to withdraw subscription renewal price with error code: %s', err.code)
+            # err = e.error
+            logging.error('failed to withdraw subscription renewal price with error code: %s', e.code)
             if not is_initial:
                 return
-            report_payment_result(
-                PaymentResult.ERROR_AUTH if err.code == 'authentication_required' else PaymentResult.ERROR_OTHER
-            )
+            if e.code == 'authentication_required':
+                user_subscription.status = STATUS.NEEDS_PAYMENT_AUTH
+                session.commit()
+                report_payment_result(PaymentResult.ERROR_AUTH)
+            else:
+                report_payment_result(PaymentResult.ERROR_OTHER)
 
 
 def report_payment_result(result: PaymentResult):
