@@ -1,6 +1,7 @@
 version: "3.8"
 
 volumes:
+  kafka_ugc:
   rabbitmq_billing_data:
   rabbitmq_billing_logs:
 
@@ -65,6 +66,24 @@ services:
     volumes:
       - rabbitmq_billing_data:/var/lib/rabbitmq/
       - rabbitmq_billing_logs:/var/log/rabbitmq
+
+  zookeeper_ugc:
+    image: wurstmeister/zookeeper:3.4.6
+    container_name: zookeeper_ugc
+    ports:
+      - "2181:2181"
+
+  kafka_ugc:
+    image: wurstmeister/kafka:2.13-2.8.1
+    container_name: kafka_ugc
+    ports:
+      - "9092:9092"
+    expose:
+      - "9093"
+    env_file:
+      - .env
+    volumes:
+      - kafka_ugc:/var/run/docker.sock
 
 networks:
   movies:
