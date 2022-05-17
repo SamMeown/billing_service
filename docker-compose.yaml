@@ -10,12 +10,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 80
+    command: uvicorn main:app --app-dir app --reload --workers 1 --host 0.0.0.0 --port 80
     container_name: app
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       - ./app:/app/app
+    env_file:
+      - .env
     networks:
       - movies
     restart: unless-stopped

@@ -1,12 +1,14 @@
 FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9-slim
 
-COPY ./requirements.txt ./
+WORKDIR /usr/src/app
 
 RUN pip install --upgrade pip
+COPY ./requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ./app /app/app
-WORKDIR /app
+COPY ./app app
+COPY ./db db
+COPY ./static static
 
 EXPOSE 80
-CMD ["gunicorn", "--bind ", "0.0.0.0:80", "-k", "uvicorn.workers.UvicornWorker", "app.main:app"]
+CMD ["python", "app/main.py"]
