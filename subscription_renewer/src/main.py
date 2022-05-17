@@ -17,17 +17,20 @@ from pika.adapters.blocking_connection import BlockingChannel
 from pika import exceptions as pika_exceptions
 from sqlalchemy import exc as sqlalchemy_exc
 from sqlalchemy.orm import Session, query
+from kafka import KafkaProducer
 
 from core import config
-from db.db_models import ModelUsers, STATUS
+from db.db_models import ModelUsers, ModelSubscriptions, STATUS
 from db.database import SessionLocal
 
 
 logging.basicConfig(level=logging.INFO)
 
-
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 stripe.api_version = os.getenv('STRIPE_API_VERSION')
+
+
+kafka_producer = KafkaProducer(bootstrap_servers=['localhost:9092'])
 
 
 def process_msg(ch: BlockingChannel, method: pika.spec.Basic.GetOk, message_body: bytes):
@@ -81,7 +84,7 @@ def renew_subscription(user_id, is_initial=True):
             if intent['status'] == 'succeeded':
                 user_subscription.status = STATUS.ACTIVE
                 session.commit()
-                report_payment_result(PaymentResult.SUCCESS)
+                report_payment_result(PaymentResult.SUCCESS, user_id, user_subscription.subscription)
             else:
                 logging.error('failed to withdraw subscription renewal price with intent status: %s', intent['status'])
         except sqlalchemy_exc.DataError as e:
@@ -97,12 +100,21 @@ def renew_subscription(user_id, is_initial=True):
             if e.code == 'authentication_required':
                 user_subscription.status = STATUS.NEEDS_PAYMENT_AUTH
                 session.commit()
-                report_payment_result(PaymentResult.ERROR_AUTH)
+                report_payment_result(PaymentResult.ERROR_AUTH, user_id, user_subscription.subscription)
             else:
-                report_payment_result(PaymentResult.ERROR_OTHER)
+                report_payment_result(PaymentResult.ERROR_OTHER, user_id, user_subscription.subscription)
 
 
-def report_payment_result(result: PaymentResult):
+def report_payment_result(result: PaymentResult, user_id, subscription: ModelSubscriptions):
+    report_topic = 'user.v1.purchase_status_changed'
+    report = {
+        'user_id': user_id,
+        'item': {
+            'type': 'subscription',
+            'id': str(subscription.id)
+        },
+        'amount': subscription.price,
+    }
     if result == PaymentResult.ERROR_AUTH:
         # Bring the customer back on-session to authenticate the purchase
         # by sending an email or app notification to let them know
@@ -110,15 +122,20 @@ def report_payment_result(result: PaymentResult):
         # Probably we can save the PM ID and client_secret to authenticate the purchase later
         # without asking your customers to re-enter their details
         # err.payment_method.id, err.payment_intent.client_secret, err.payment_method.card
-        pass
+        report['status'] = 'awaits_renewal'
+        report['sub_status'] = 'awaits_auth'
     elif result == PaymentResult.ERROR_OTHER:
         # The card was declined for other reasons (e.g. insufficient funds)
         # Bring the customer back on-session by sending him a message asking him for a new payment method
-        pass
+        report['status'] = 'awaits_renewal'
+        report['sub_status'] = 'awaits_card'
     else:
-        # success
+        report['status'] = 'renewed'
         print('success!!!')
-        pass
+
+    kafka_producer.send(report_topic,
+                        value=json.dumps(report).encode('utf-8'),
+                        key=user_id.encode('utf-8'))
 
 
 def init_message_queue(mq_dsn: dict, exchange: str) -> (pika.BlockingConnection, BlockingChannel, list[str]):
