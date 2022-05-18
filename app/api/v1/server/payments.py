@@ -81,12 +81,10 @@ def pay(user_id: str,
             # If it fails, exception will be raised
 
             intent = stripe.PaymentIntent.create(**payment_intent_data)
-            return generate_response(intent, data, user, db, events_reporter)
 
         elif data['action'] == 'confirm':
             # Confirm the PaymentIntent to collect the money
             intent = stripe.PaymentIntent.confirm(data['paymentId'])
-            generate_response(intent, data, user, db, events_reporter)
 
         else:  # 'repeat'
 
