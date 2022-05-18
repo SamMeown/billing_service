@@ -11,7 +11,6 @@ from .database import Base
 class STATUS(enum.Enum):
     ACTIVE = "ACTIVE"
     NEEDS_PAYMENT = "NEEDS_PAYMENT"
-    NEEDS_PAYMENT_AUTH = "NEEDS_PAYMENT_AUTH"
     EXPIRED = "EXPIRED"
 
 

@@ -46,9 +46,11 @@ def create(
     if db.query(ModelUsers).filter(ModelUsers.id == users.id).first() is not None:
         return {"response": f'The {object} already exists'}
     else:
+
         to_create = ModelUsers(
             id=users.id,
-            stripe_cus_id=users.stripe_cus_id
+            # stripe_cus_id=users.stripe_cus_id
+            # user_subscription_id=users.user_subscription_id or None
         )
         db.add(to_create)
         db.commit()

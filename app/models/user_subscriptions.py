@@ -12,9 +12,6 @@ class STATUS(enum.Enum):
 
 
 class UserSubscriptionBase(PydanticBaseModel):
-    user_id: UUID = Field(
-        default_factory=uuid4,
-        description="Foreign key in the table users")
     sub_id: UUID = Field(
         default_factory=uuid4,
         description="Foreign key in the table subscriptions")
@@ -32,7 +29,6 @@ class UserSubscriptionBase(PydanticBaseModel):
         title = "Basic payments model"
         schema_extra = {
             "example": {
-                "user_id": "a943812d-fe0f-4148-9754-c2648d07647c",
                 "sub_id": "b943812d-fe0f-4627-9754-c2648d096478",
                 "recurring":  True,  # auto-renewal payments
                 "status": "ACTIVE",  # "choice(ACTIVE | NEEDS_PAYMENT | EXPIRED)",

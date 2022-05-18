@@ -116,7 +116,8 @@ var handleAction = function(clientSecret) {
         },
         body: JSON.stringify({
           action: 'confirm',
-          paymentId: data.paymentIntent.id
+          paymentId: data.paymentIntent.id,
+          item: orderData.item
         })
       })
         .then(function(result) {
@@ -191,7 +192,7 @@ var pay = function(stripe, card) {
       } else {
         const product = chosenProduct();
         orderData.item = {
-          'type': product.type,
+          'type': 'subscription',
           'id': product.id
         }
         orderData.paymentMethodId = result.paymentMethod.id;

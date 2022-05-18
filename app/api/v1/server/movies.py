@@ -11,23 +11,8 @@ from db.database import get_db
 from db.db_models import ModelMovies
 from app.models.movies import MovieBase
 
-
 router = APIRouter()
 object = 'movies'
-
-
-movies = {
-    'movie_swe4': {
-        'type': 'movie',
-        'name': 'Star Wars: Episode 4',
-        'price': 8,
-    },
-    'movie_swe5': {
-        'type': 'movie',
-        'name': 'Star Wars: Episode 5',
-        'price': 8,
-    },
-}
 
 
 @router.get('/movies')
