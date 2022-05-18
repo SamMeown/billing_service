@@ -2,6 +2,7 @@ import stripe
 from fastapi import APIRouter, Body, Depends, Response, status
 from sqlalchemy.orm import Session
 
+from msg.events_reporter import EventsReporter, get_events_reporter
 from db.database import get_db
 from db.db_models import (ModelMovies, ModelSubscriptions, ModelUserMovies,
                           ModelUsers, ModelUserSubscription)
@@ -27,8 +28,12 @@ def calculate_order_amount(item, db: Session = Depends(get_db)):
 
 
 @router.post('/users/{user_id}/payments')
-def pay(user_id: str, response: Response, data: dict = Body(...), db: Session = Depends(get_db)):
-    user_id = 'b3161399-48ca-42be-afa5-bf6353df9911'
+def pay(user_id: str,
+        response: Response,
+        data: dict = Body(...),
+        db: Session = Depends(get_db),
+        events_reporter: EventsReporter = Depends(get_events_reporter)):
+    user_id = '6a8b52b0-c402-4aee-9693-128b1581e092'
 
     # data['item']['type'] = 'subscription'
     # data['action'] = 'repeat'
@@ -76,12 +81,12 @@ def pay(user_id: str, response: Response, data: dict = Body(...), db: Session = 
             # If it fails, exception will be raised
 
             intent = stripe.PaymentIntent.create(**payment_intent_data)
-            return generate_response(intent, data, user, db)
+            return generate_response(intent, data, user, db, events_reporter)
 
         elif data['action'] == 'confirm':
             # Confirm the PaymentIntent to collect the money
             intent = stripe.PaymentIntent.confirm(data['paymentId'])
-            generate_response(intent, data, user, db)
+            generate_response(intent, data, user, db, events_reporter)
 
         else:  # 'repeat'
 
@@ -104,7 +109,7 @@ def pay(user_id: str, response: Response, data: dict = Body(...), db: Session = 
                 off_session=True
             )
 
-        return generate_response(intent, data, user, db)
+        return generate_response(intent, data, user, db, events_reporter)
     except stripe.error.CardError as e:
         # off-session errors
         err = e.error
@@ -130,7 +135,9 @@ def pay(user_id: str, response: Response, data: dict = Body(...), db: Session = 
         return dict(error=str(e))
 
 
-def generate_response(intent, data: dict = Body(...), user: ModelUsers = ModelUsers, db: Session = Depends(get_db)):
+def generate_response(intent: stripe.PaymentIntent, data: dict, user: ModelUsers,
+                      db: Session,
+                      events_reporter: EventsReporter):
     _status = intent['status']
     if _status == 'requires_action' or _status == 'requires_source_action':
         # Card requires authentication
@@ -175,6 +182,9 @@ def generate_response(intent, data: dict = Body(...), user: ModelUsers = ModelUs
             )
             db.add(to_create)
             db.commit()
+
+        # report new purchase
+        events_reporter.report_status_change(str(user.id), data['item'], intent.amount, 'new')
 
         return {'clientSecret': intent['client_secret'], 'status': 'success'}
 
