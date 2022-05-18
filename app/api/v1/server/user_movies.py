@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 
 from db.database import get_db
 from db.db_models import ModelUserMovies
-from app.models.user_movies import UserMovieBase
 
 router = APIRouter()
 object = 'user_movies'

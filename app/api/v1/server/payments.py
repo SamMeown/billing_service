@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Response, Body, status
 import stripe
-from db.db_models import ModelUsers, ModelSubscriptions, ModelMovies, ModelUserSubscription, ModelUserMovies
-from db.database import get_db
+from fastapi import APIRouter, Body, Depends, Response, status
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends
+
+from db.database import get_db
+from db.db_models import (ModelMovies, ModelSubscriptions, ModelUserMovies,
+                          ModelUsers, ModelUserSubscription)
 
 router = APIRouter()
 

@@ -2,14 +2,13 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends
 from fastapi.encoders import jsonable_encoder
-from fastapi.param_functions import Query
 from fastapi_pagination import Params
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 
+from app.models.users import UsersBase
 from db.database import get_db
 from db.db_models import ModelUsers
-from app.models.users import UsersBase
 
 router = APIRouter()
 object = 'users'

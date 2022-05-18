@@ -1,6 +1,7 @@
 from sqladmin import ModelAdmin
 
-from db.db_models import ModelSubscriptions, ModelUsers, ModelUserSubscription, ModelMovies
+from db.db_models import (ModelMovies, ModelSubscriptions, ModelUsers,
+                          ModelUserSubscription)
 
 
 class SubscriptionAdmin(ModelAdmin, model=ModelSubscriptions):

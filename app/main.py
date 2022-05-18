@@ -1,15 +1,20 @@
 import os
 import sys
+
 app_root = os.path.dirname(os.path.abspath(__file__))
 app_root_parent = os.path.dirname(app_root)
 sys.path.append(app_root_parent)
-import uvicorn
 import logging
+
+import uvicorn
+from api.v1.server import (movies, payments, server, subscriptions,
+                           user_movies, user_subscriptions, users)
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from models.admin_models import (MovieAdmin, SubscriptionAdmin, UsersAdmin,
+                                 UserSubscriptionAdmin)
 from sqladmin import Admin
-from api.v1.server import server, subscriptions, payments, users, user_subscriptions, movies, user_movies
-from models.admin_models import SubscriptionAdmin, MovieAdmin, UsersAdmin, UserSubscriptionAdmin
+
 from db.database import engine
 
 app = FastAPI(
@@ -51,13 +56,13 @@ app.include_router(
     ],
 )
 
-app.include_router(
-    users.router,
-    prefix="",
-    tags=[
-        "Users",
-    ],
-)
+# app.include_router(
+#     users.router,
+#     prefix="",
+#     tags=[
+#         "Users",
+#     ],
+# )
 
 app.include_router(
     user_subscriptions.router,

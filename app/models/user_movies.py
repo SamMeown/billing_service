@@ -1,8 +1,10 @@
-from typing import Optional
 import enum
-from app.models._base import BaseModelID, Field
-from pydantic import BaseModel as PydanticBaseModel
+from typing import Optional
 from uuid import UUID, uuid4
+
+from pydantic import BaseModel as PydanticBaseModel
+
+from app.models._base import BaseModelID, Field
 
 
 class STATUS(enum.Enum):

@@ -1,7 +1,8 @@
 from typing import Optional
 
-from app.models._base import BaseModelID, Field
 from pydantic import BaseModel as PydanticBaseModel
+
+from app.models._base import BaseModelID, Field
 
 
 class MovieBase(PydanticBaseModel):
