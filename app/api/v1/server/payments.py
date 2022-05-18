@@ -8,8 +8,6 @@ from db.db_models import (ModelMovies, ModelSubscriptions, ModelUserMovies,
 
 router = APIRouter()
 
-current_item: dict = None
-
 
 def calculate_order_amount(item, db: Session = Depends(get_db)):
     # Calculate the order total on the server to prevent
@@ -30,7 +28,6 @@ def calculate_order_amount(item, db: Session = Depends(get_db)):
 
 @router.post('/users/{user_id}/payments')
 def pay(user_id: str, response: Response, data: dict = Body(...), db: Session = Depends(get_db)):
-    global current_item
     user_id = 'b3161399-48ca-42be-afa5-bf6353df9911'
 
     # data['item']['type'] = 'subscription'
@@ -48,7 +45,6 @@ def pay(user_id: str, response: Response, data: dict = Body(...), db: Session = 
     try:
 
         if data['action'] == 'create':
-            current_item = data['item']
             # create corresponding stripe customer if user doesn't have one yet
 
             if user.stripe_cus_id is None:
