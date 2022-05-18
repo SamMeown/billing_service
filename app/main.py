@@ -7,6 +7,8 @@ sys.path.append(app_root_parent)
 import logging
 
 import uvicorn
+from aiokafka import AIOKafkaProducer
+from kafka import KafkaProducer
 from aio_pika import connect
 from api.v1.server import (movies, payments, server, subscriptions,
                            user_movies, user_subscriptions, users)
@@ -18,7 +20,7 @@ from sqladmin import Admin
 
 from core import config
 from db.database import engine
-from msg import rabbit
+from msg import rabbit, kafka
 
 app = FastAPI(
     title="Billing MVP",
@@ -33,11 +35,16 @@ admin = Admin(app, engine=engine)
 @app.on_event('startup')
 async def startup():
     rabbit.rabbit = await connect('ampq://{user}:{password}@{host}:{port}'.format(**config.RABBITMQ_DSN))
+    kafka.kafka.producer_sync = KafkaProducer(bootstrap_servers=['{host}:{port}'.format(**config.KAFKA_DSN)])
+    kafka.kafka.producer_async = AIOKafkaProducer(bootstrap_servers='{host}:{port}'.format(**config.KAFKA_DSN),
+                                                  metadata_max_age_ms=config.KAFKA_CLIENT_METADATA_TTL * 1000)
+    await kafka.kafka.producer_async.start()
 
 
 @app.on_event('shutdown')
 async def shutdown():
     await rabbit.rabbit.close()
+    await kafka.kafka.producer_async.stop()
 
 
 admin.register_model(SubscriptionAdmin)

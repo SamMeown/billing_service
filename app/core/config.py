@@ -9,3 +9,10 @@ RABBITMQ_DSN = {
     'user': os.environ.get('RABBITMQ_DEFAULT_USER'),
     'password': os.environ.get('RABBITMQ_DEFAULT_PASS')
 }
+
+KAFKA_DSN = {
+    'host': os.getenv('UGC_KAFKA_HOST', '127.0.0.1'),
+    'port': int(os.getenv('UGC_KAFKA_PORT', 9092)),
+}
+KAFKA_CLIENT_METADATA_TTL = 30
+KAFKA_BILLING_REPORT_TOPIC = 'user.v1.purchase_status_changed'
