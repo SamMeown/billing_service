@@ -213,7 +213,7 @@ def get(
 
 
 @router.delete('/users/{user_id}/subscription')
-def delete_subscription(
+def delete_users_subscription(
         user_id: str,
         chargeback: bool,
         db: Session = Depends(get_db)
