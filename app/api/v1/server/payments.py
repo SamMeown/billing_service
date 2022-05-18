@@ -166,7 +166,7 @@ def generate_response(intent, data: dict = Body(...), user: ModelUsers = ModelUs
 
                 user_subscription = user.subscription
 
-                if user_subscription.sub_id != data['item']['id']:
+                if str(user_subscription.sub_id) != data['item']['id']:
                     return {'error': 'You are trying to pay for the wrong subscription'}
 
                 user_subscription.status = "ACTIVE"
