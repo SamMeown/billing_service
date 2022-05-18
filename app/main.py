@@ -7,6 +7,7 @@ sys.path.append(app_root_parent)
 import logging
 
 import uvicorn
+from aio_pika import connect
 from api.v1.server import (movies, payments, server, subscriptions,
                            user_movies, user_subscriptions, users)
 from fastapi import FastAPI
@@ -15,7 +16,9 @@ from models.admin_models import (MovieAdmin, SubscriptionAdmin, UsersAdmin,
                                  UserSubscriptionAdmin)
 from sqladmin import Admin
 
+from core import config
 from db.database import engine
+from msg import rabbit
 
 app = FastAPI(
     title="Billing MVP",
@@ -25,6 +28,17 @@ app = FastAPI(
 )
 
 admin = Admin(app, engine=engine)
+
+
+@app.on_event('startup')
+async def startup():
+    rabbit.rabbit = await connect('ampq://{user}:{password}@{host}:{port}'.format(**config.RABBITMQ_DSN))
+
+
+@app.on_event('shutdown')
+async def shutdown():
+    await rabbit.rabbit.close()
+
 
 admin.register_model(SubscriptionAdmin)
 admin.register_model(MovieAdmin)
