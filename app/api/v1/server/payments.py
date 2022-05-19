@@ -220,7 +220,8 @@ def get(
 def delete_users_subscription(
         user_id: str,
         chargeback: bool,
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        events_reporter: EventsReporter = Depends(get_events_reporter)
 ) -> dict:
     response = db.query(
         ModelUserSubscription
@@ -237,6 +238,11 @@ def delete_users_subscription(
             response.status = "EXPIRED"
             db.add(response)
             db.commit()
+            # report subscription end
+            events_reporter.report_status_change(user_id,
+                                                 {'type': 'subscription', 'id': str(response.sub_id)},
+                                                 response.subscription.price,
+                                                 'expired')
             return {"id": response.id, "status": response.status,
                     "mssage": "Subscription is discontinued. Money back on the card."}
         else:
@@ -251,19 +257,27 @@ def delete_users_subscription(
 def delete_movies(
         user_id: str,
         movie_id: str,
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        events_reporter: EventsReporter = Depends(get_events_reporter)
 ) -> dict:
     response = db.query(
-        ModelUserMovies
+        ModelUserMovies, ModelMovies
     ).filter(
         ModelUserMovies.user_id == user_id
     ).filter(
         ModelUserMovies.movie_id == movie_id
+    ).filter(
+        ModelUserMovies.movie_id == ModelMovies.id
     ).first()
 
     if response is None:
         return {"response": f'The object not found'}
     else:
-        db.query(ModelUserMovies).filter(ModelUserMovies.id == response.id).delete()
+        db.query(ModelUserMovies).filter(ModelUserMovies.id == response[0].id).delete()
         db.commit()
-        return {"response": response.id, "mssage": "Access to the film has been terminated."}
+        # report movie "expiration"
+        events_reporter.report_status_change(user_id,
+                                             {'type': 'movie', 'id': str(response[1].id)},
+                                             response[1].price,
+                                             'expired')
+        return {"response": response[0].id, "mssage": "Access to the film has been terminated."}
