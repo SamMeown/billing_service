@@ -1,5 +1,21 @@
 import os
 
+from pydantic import BaseSettings, Field, SecretStr
+
+
+class DBsecret(BaseSettings):
+    user: str = Field(..., env="POSTGRES_USER")
+    password: str = Field(..., env="POSTGRES_PASSWORD")
+    name: str = Field(..., env="POSTGRES_DB")
+    host: str = Field(..., env="POSTGRES_HOST")
+    port: str = Field(..., env="POSTGRES_PORT")
+
+    class Config:
+        case_sentive = False
+        env_file = '.env'
+
+
+POSTGRES_DSN = DBsecret().dict()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
