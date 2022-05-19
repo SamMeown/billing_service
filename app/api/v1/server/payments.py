@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import stripe
 from fastapi import APIRouter, Body, Depends, Response, status
 from sqlalchemy.orm import Session
@@ -156,11 +158,11 @@ def generate_response(intent: stripe.PaymentIntent, data: dict, user: ModelUsers
                 db.add(to_create)
                 db.commit()
 
-                user_subscriptions_id = db.query(ModelUserSubscription).filter(
+                user_subscription = db.query(ModelUserSubscription).filter(
                     ModelUserSubscription.sub_id == data['item']['id']).first()
 
                 # 'users'
-                user.user_subscription_id = user_subscriptions_id.id
+                user.user_subscription_id = user_subscription.id
                 db.add(user)
                 db.commit()
             else:
@@ -173,6 +175,8 @@ def generate_response(intent: stripe.PaymentIntent, data: dict, user: ModelUsers
                 user_subscription.status = "ACTIVE"
                 db.add(user_subscription)
                 db.commit()
+            user_subscription.expires = datetime.utcnow() + timedelta(days=user_subscription.subscription.period)
+            db.commit()
         else:
             to_create = ModelUserMovies(
                 user_id=user.id,
