@@ -46,11 +46,13 @@ def upgrade():
         sa.Column('recurring', sa.Boolean, nullable=False, server_default='True'),
         sa.Column('status', sa.String, nullable=False, server_default='ACTIVE'),
         sa.Column('grace_days', sa.Integer, nullable=False, server_default='3'),
+        sa.Column('expires', sa.DateTime(), nullable=False),
 
         sa.Column('created_on', sa.DateTime(timezone=True), nullable=False, server_default=func.now()),
         sa.Column('updated_on', sa.DateTime(timezone=True), nullable=False, server_default=func.now(),
                   onupdate=datetime.utcnow)
     ),
+    op.create_index(op.f('ix_user_subscriptions_expires'), 'user_subscriptions', ['expires'], unique=False),
 
     op.create_table(
         'users',
@@ -91,6 +93,7 @@ def upgrade():
 
 
 def downgrade():
+    op.drop_index(op.f('ix_user_subscriptions_expires'), table_name='user_subscriptions')
     op.drop_table('user_subscriptions')
     op.drop_table('user_movies')
     op.drop_table('subscriptions')

@@ -69,6 +69,7 @@ class ModelUserSubscription(Base):
     sub_id = Column(UUID(as_uuid=True), ForeignKey('subscriptions.id'), nullable=False)
     recurring = Column(Boolean, default=True, nullable=False)
     status = Column(Enum(STATUS), default=STATUS.ACTIVE, nullable=False)
+    expires = Column(DateTime(), nullable=False, index=True)
     grace_days = Column(Integer, default=3, nullable=False)
     users = relationship('ModelUsers', back_populates='subscription')
     subscription = relationship('ModelSubscriptions')
