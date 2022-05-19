@@ -1,3 +1,4 @@
+import asyncio
 import os
 import sys
 
@@ -21,6 +22,10 @@ from sqladmin import Admin
 from core import config
 from db.database import engine
 from msg import rabbit, kafka
+from msg.message_broker import get_message_broker
+from msg.events_reporter import get_events_reporter
+from services.subscription_renewer import SubscriptionRenewer
+
 
 app = FastAPI(
     title="Billing MVP",
@@ -32,6 +37,12 @@ app = FastAPI(
 admin = Admin(app, engine=engine)
 
 
+async def check(subscriptions_renewer: SubscriptionRenewer, interval: int):
+    while True:
+        await subscriptions_renewer.check_subscriptions()
+        await asyncio.sleep(interval)
+
+
 @app.on_event('startup')
 async def startup():
     rabbit.rabbit = await connect('ampq://{user}:{password}@{host}:{port}'.format(**config.RABBITMQ_DSN))
@@ -39,6 +50,11 @@ async def startup():
     kafka.kafka.producer_async = AIOKafkaProducer(bootstrap_servers='{host}:{port}'.format(**config.KAFKA_DSN),
                                                   metadata_max_age_ms=config.KAFKA_CLIENT_METADATA_TTL * 1000)
     await kafka.kafka.producer_async.start()
+
+    msg_broker = await get_message_broker(await rabbit.get_rabbit())
+    events_reporter = await get_events_reporter(await kafka.get_kafka())
+    subscription_renewer = SubscriptionRenewer(msg_broker, events_reporter)
+    asyncio.create_task(check(subscription_renewer, config.SUBSCRIPTIONS_CHECK_INTERVAL))
 
 
 @app.on_event('shutdown')
