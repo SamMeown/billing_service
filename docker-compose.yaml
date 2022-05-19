@@ -1,16 +1,23 @@
 version: "3.8"
 
+volumes:
+  kafka_ugc:
+  rabbitmq_billing_data:
+  rabbitmq_billing_logs:
+
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    command: uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 80
+    command: uvicorn main:app --app-dir app --reload --workers 1 --host 0.0.0.0 --port 80
     container_name: app
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       - ./app:/app/app
+    env_file:
+      - .env
     networks:
       - movies
     restart: unless-stopped
@@ -49,6 +56,36 @@ services:
     networks:
       - movies
     restart: unless-stopped
+  
+  rabbitmq_billing:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq_billing
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    env_file:
+      - .env
+    volumes:
+      - rabbitmq_billing_data:/var/lib/rabbitmq/
+      - rabbitmq_billing_logs:/var/log/rabbitmq
+
+  zookeeper_ugc:
+    image: wurstmeister/zookeeper:3.4.6
+    container_name: zookeeper_ugc
+    ports:
+      - "2181:2181"
+
+  kafka_ugc:
+    image: wurstmeister/kafka:2.13-2.8.1
+    container_name: kafka_ugc
+    ports:
+      - "9092:9092"
+    expose:
+      - "9093"
+    env_file:
+      - .env
+    volumes:
+      - kafka_ugc:/var/run/docker.sock
 
 networks:
   movies:
