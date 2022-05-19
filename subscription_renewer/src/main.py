@@ -8,6 +8,7 @@ import time
 import json
 import logging
 import enum
+from datetime import timedelta
 
 import backoff
 import pika
@@ -83,6 +84,7 @@ def renew_subscription(user_id, is_initial=True):
             )
             if intent['status'] == 'succeeded':
                 user_subscription.status = STATUS.ACTIVE
+                user_subscription.expires += timedelta(days=user_subscription.subscription.period)
                 session.commit()
                 report_payment_result(PaymentResult.SUCCESS, user_id, user_subscription.subscription)
             else:
