@@ -6,10 +6,21 @@ EMPTY_QUEUES_RETRY_TIMEOUT = 10
 
 PAYMENT_EXCHANGE = os.environ.get('BILLING_PAYMENT_EXCHANGE', 'payments')
 
-RABBITMQ_DSN = {
-    'host': os.environ.get('RABBITMQ_BILLING_HOST', 'localhost'),
-    'port': int(os.environ.get('RABBITMQ_BILLING_PORT', 5672)),
-    'user': os.environ.get('RABBITMQ_DEFAULT_USER'),
-    'password': os.environ.get('RABBITMQ_DEFAULT_PASS'),
-}
+
+from pydantic import BaseSettings, Field
+
+
+class RABBITMQsecret(BaseSettings):
+    host: str = Field(..., env="RABBITMQ_BILLING_HOST")
+    port: int = Field(..., env="RABBITMQ_BILLING_PORT")
+    user: str = Field(..., env="RABBITMQ_DEFAULT_USER")
+    password: str = Field(..., env="RABBITMQ_DEFAULT_PASS")
+
+    class Config:
+        case_sentive = False
+        env_file = '.env'
+
+
+RABBITMQ_DSN = RABBITMQsecret().dict()
+
 RABBITMQ_CONNECTION_RETRIES = 4

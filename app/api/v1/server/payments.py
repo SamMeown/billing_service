@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 
 import stripe
@@ -131,7 +132,7 @@ def pay(user_id: str,
             }
     except Exception as e:
         response.status_code = status.HTTP_403_FORBIDDEN
-        print(e)
+        logging.error(e)
         return dict(error=str(e))
 
 
@@ -148,7 +149,7 @@ def generate_response(intent: stripe.PaymentIntent, data: dict, user: ModelUsers
     elif _status == 'succeeded':
         # Payment is complete, authentication not required
         # To cancel the payment after capture you will need to issue a Refund (https://stripe.com/docs/api/refunds)
-        print("💰 Payment received!")
+        logging.debug("💰 Payment received!")
         if data['item']['type'] == 'subscription':
             if user.user_subscription_id is None:
                 # 'user_subscriptions'
