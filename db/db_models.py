@@ -2,8 +2,8 @@ import uuid
 from datetime import datetime, timedelta
 import enum
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import Column, ForeignKey, DateTime, String, Integer, Table, Boolean, Enum
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy import Column, ForeignKey, DateTime, String, Integer, Boolean, Enum, Index, UniqueConstraint
+from sqlalchemy.orm import relationship
 
 from .database import Base
 
@@ -19,7 +19,7 @@ class ModelMovies(Base):
     __tablename__ = 'movies'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    name = Column(String, unique=True, nullable=False)
+    name = Column(String, unique=True, nullable=False, index=True)
     description = Column(String)
     price = Column(Integer, default=0, nullable=False)
 
@@ -50,8 +50,9 @@ class ModelUsers(Base):
     __tablename__ = 'users'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    stripe_cus_id = Column(String(256), nullable=True)
-    user_subscription_id = Column(UUID(as_uuid=True), ForeignKey('user_subscriptions.id'), nullable=True, unique=True)
+    stripe_cus_id = Column(String(256), nullable=True, index=True)
+    user_subscription_id = Column(UUID(as_uuid=True), ForeignKey('user_subscriptions.id'), nullable=True, unique=True,
+                                  index=True)
     subscription = relationship("ModelUserSubscription", back_populates='users')
     movies = relationship('ModelMovies', secondary='user_movies')
 
@@ -77,6 +78,10 @@ class ModelUserSubscription(Base):
     created_on = Column(DateTime(), default=datetime.utcnow)
     updated_on = Column(DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    __table_args__ = (
+        Index('user_subscription_status_expires_idx', status, expires),
+    )
+
 
 class ModelUserMovies(Base):
     __tablename__ = 'user_movies'
@@ -87,3 +92,8 @@ class ModelUserMovies(Base):
 
     created_on = Column(DateTime(), default=datetime.utcnow)
     updated_on = Column(DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        Index('user_movies_user_movie_unique_idx', user_id, movie_id, unique=True),
+        Index('user_movies_movie_idx', movie_id)
+    )
