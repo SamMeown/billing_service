@@ -1,6 +1,6 @@
 import os
 
-from pydantic import BaseSettings, Field, SecretStr
+from pydantic import BaseSettings, Field
 
 
 class DBsecret(BaseSettings):
@@ -19,17 +19,32 @@ POSTGRES_DSN = DBsecret().dict()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-RABBITMQ_DSN = {
-    'host': os.environ.get('RABBITMQ_BILLING_HOST', 'localhost'),
-    'port': int(os.environ.get('RABBITMQ_BILLING_PORT', 5672)),
-    'user': os.environ.get('RABBITMQ_DEFAULT_USER'),
-    'password': os.environ.get('RABBITMQ_DEFAULT_PASS')
-}
 
-KAFKA_DSN = {
-    'host': os.getenv('UGC_KAFKA_HOST', '127.0.0.1'),
-    'port': int(os.getenv('UGC_KAFKA_PORT', 9092)),
-}
+class RABBITMQsecret(BaseSettings):
+    host: str = Field(..., env="RABBITMQ_BILLING_HOST")
+    port: int = Field(..., env="RABBITMQ_BILLING_PORT")
+    user: str = Field(..., env="RABBITMQ_DEFAULT_USER")
+    password: str = Field(..., env="RABBITMQ_DEFAULT_PASS")
+
+    class Config:
+        case_sentive = False
+        env_file = '.env'
+
+
+RABBITMQ_DSN = RABBITMQsecret().dict()
+
+
+class KAFKAsecret(BaseSettings):
+    host: str = Field(..., env="UGC_KAFKA_HOST")
+    port: int = Field(..., env="UGC_KAFKA_PORT")
+
+    class Config:
+        case_sentive = False
+        env_file = '.env'
+
+
+KAFKA_DSN = KAFKAsecret().dict()
+
 KAFKA_CLIENT_METADATA_TTL = 30
 KAFKA_BILLING_REPORT_TOPIC = 'user.v1.purchase_status_changed'
 
