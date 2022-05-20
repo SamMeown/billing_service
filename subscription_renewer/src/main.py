@@ -3,7 +3,6 @@ import sys
 app_root = os.path.dirname(os.path.abspath(__file__))
 app_root_grandparent = os.path.dirname(os.path.dirname(app_root))
 sys.path.append(app_root_grandparent)
-print(sys.path)
 import time
 import json
 import logging
@@ -133,7 +132,7 @@ def report_payment_result(result: PaymentResult, user_id, subscription: ModelSub
         report['sub_status'] = 'awaits_card'
     else:
         report['status'] = 'renewed'
-        print('success!!!')
+        logging.debug('success!!!')
 
     kafka_producer.send(report_topic,
                         value=json.dumps(report).encode('utf-8'),
@@ -173,7 +172,7 @@ def run_subscription_renew_loop():
                 process_msg(mq_channel, m_frame, msg_body)
             else:
                 # Queue is empty. Sleeping...
-                print('Queue is empty. Sleeping...')
+                logging.debug('Queue is empty. Sleeping...')
                 time.sleep(config.EMPTY_QUEUES_RETRY_TIMEOUT)
     finally:
         mq_connection.close()
